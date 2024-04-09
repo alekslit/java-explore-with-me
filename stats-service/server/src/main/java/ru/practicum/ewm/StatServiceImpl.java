@@ -13,6 +13,7 @@ import java.util.List;
 public class StatServiceImpl implements StatService {
     private final StatRepository repository;
 
+    /*--------------------Основные методы--------------------*/
     @Override
     public Stat saveStat(StatDto statDto) {
         log.debug("Попытка сохранить новый объект Stat.");
@@ -22,7 +23,7 @@ public class StatServiceImpl implements StatService {
     }
 
     @Override
-    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, String[] uris) {
+    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
         log.debug("Попытка получить список ViewStats.");
         List<ViewStats> stats = repository.getStats(start, end, uris);
 
@@ -30,7 +31,7 @@ public class StatServiceImpl implements StatService {
     }
 
     @Override
-    public List<ViewStats> getStatsByUniqueIp(LocalDateTime start, LocalDateTime end, String[] uris) {
+    public List<ViewStats> getStatsByUniqueIp(LocalDateTime start, LocalDateTime end, List<String> uris) {
         log.debug("Попытка получить список ViewStats по уникальным IP.");
         List<ViewStats> stats = repository.getStatsByUniqueIp(start, end, uris);
 

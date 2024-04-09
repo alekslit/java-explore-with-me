@@ -1,14 +1,17 @@
 package ru.practicum.ewm;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class StatController {
     private final StatService service;
 
@@ -21,12 +24,14 @@ public class StatController {
     @GetMapping("/stats")
     public List<ViewStats> getStats(@RequestParam(required = false) String start,
                                     @RequestParam(required = false) String end,
-                                    @RequestParam(value = "uris[]", required = false) String[] uris,
+                                    @RequestParam(value = "uris", required = false) String[] uris,
                                     @RequestParam(defaultValue = "false") Boolean unique) {
         if (unique) {
-            return service.getStatsByUniqueIp(parseToLocalDateTime(start), parseToLocalDateTime(end), uris);
+            return service.getStatsByUniqueIp(parseToLocalDateTime(start),
+                    parseToLocalDateTime(end), arrayToList(uris));
         } else {
-            return service.getStats(parseToLocalDateTime(start), parseToLocalDateTime(end), uris);
+            return service.getStats(parseToLocalDateTime(start),
+                    parseToLocalDateTime(end), arrayToList(uris));
         }
     }
 
@@ -38,5 +43,14 @@ public class StatController {
         } else {
             return null;
         }
+    }
+
+    private List<String> arrayToList(String[] uris) {
+        if (uris == null) {
+            return null;
+        }
+        List<String> urisList = Arrays.asList(uris);
+
+        return urisList;
     }
 }
