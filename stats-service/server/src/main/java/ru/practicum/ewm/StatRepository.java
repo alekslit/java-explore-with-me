@@ -15,7 +15,7 @@ public interface StatRepository extends JpaRepository<Stat, Long> {
             "GROUP BY s.app, " +
             "         s.uri " +
             "ORDER BY COUNT(s.ip) DESC")
-    List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris);
+    List<ViewStats> getStatsByAllIp(LocalDateTime start, LocalDateTime end, List<String> uris);
 
     @Query("SELECT new ru.practicum.ewm.ViewStats(s.app, s.uri, COUNT(DISTINCT s.ip)) " +
             "FROM Stat AS s " +

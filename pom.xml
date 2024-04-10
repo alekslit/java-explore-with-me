@@ -26,17 +26,8 @@
     <properties>
         <java.version>11</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <logbook-spring-boot-starter.version>2.16.0</logbook-spring-boot-starter.version>
     </properties>
 
-    <dependencies>
-        <!-- https://mvnrepository.com/artifact/org.zalando/logbook-spring-boot-starter -->
-        <dependency>
-            <groupId>org.zalando</groupId>
-            <artifactId>logbook-spring-boot-starter</artifactId>
-            <version>${logbook-spring-boot-starter.version}</version>
-        </dependency>
-    </dependencies>
 
     <build>
         <pluginManagement>

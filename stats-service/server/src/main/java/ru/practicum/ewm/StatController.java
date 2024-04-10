@@ -26,13 +26,7 @@ public class StatController {
                                     @RequestParam(required = false) String end,
                                     @RequestParam(value = "uris", required = false) String[] uris,
                                     @RequestParam(defaultValue = "false") Boolean unique) {
-        if (unique) {
-            return service.getStatsByUniqueIp(parseToLocalDateTime(start),
-                    parseToLocalDateTime(end), arrayToList(uris));
-        } else {
-            return service.getStats(parseToLocalDateTime(start),
-                    parseToLocalDateTime(end), arrayToList(uris));
-        }
+        return service.getStats(parseToLocalDateTime(start), parseToLocalDateTime(end), arrayToList(uris), unique);
     }
 
     /*---------------Вспомогательные методы---------------*/
