@@ -23,9 +23,18 @@ public class StatServiceImpl implements StatService {
     }
 
     @Override
-    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris) {
+    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+        if (unique) {
+            return getStatsByUniqueIp(start, end, uris);
+        } else {
+            return getStatsByAllIp(start, end, uris);
+        }
+    }
+
+    @Override
+    public List<ViewStats> getStatsByAllIp(LocalDateTime start, LocalDateTime end, List<String> uris) {
         log.debug("Попытка получить список ViewStats.");
-        List<ViewStats> stats = repository.getStats(start, end, uris);
+        List<ViewStats> stats = repository.getStatsByAllIp(start, end, uris);
 
         return stats;
     }
