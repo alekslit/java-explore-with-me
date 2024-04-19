@@ -5,6 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -23,11 +25,11 @@ public class StatServiceImpl implements StatService {
     }
 
     @Override
-    public List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
+    public List<ViewStats> getStats(String start, String end, /*String[]*/List<String> uris, Boolean unique) {
         if (unique) {
-            return getStatsByUniqueIp(start, end, uris);
+            return getStatsByUniqueIp(parseToLocalDateTime(start), parseToLocalDateTime(end), /*arrayToList(*/uris/*)*/);
         } else {
-            return getStatsByAllIp(start, end, uris);
+            return getStatsByAllIp(parseToLocalDateTime(start), parseToLocalDateTime(end), /*arrayToList(*/uris/*)*/);
         }
     }
 
@@ -45,5 +47,24 @@ public class StatServiceImpl implements StatService {
         List<ViewStats> stats = repository.getStatsByUniqueIp(start, end, uris);
 
         return stats;
+    }
+
+    /*---------------Вспомогательные методы---------------*/
+    private LocalDateTime parseToLocalDateTime(String time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        if (time != null) {
+            return LocalDateTime.parse(time, formatter);
+        } else {
+            return null;
+        }
+    }
+
+    private List<String> arrayToList(String[] uris) {
+        if (uris == null) {
+            return null;
+        }
+        List<String> urisList = Arrays.asList(uris);
+
+        return urisList;
     }
 }

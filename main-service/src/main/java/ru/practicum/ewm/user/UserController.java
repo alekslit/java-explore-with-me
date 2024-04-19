@@ -11,15 +11,22 @@ import java.util.List;
 @RequestMapping(path = "/admin/users")
 public class UserController {
     private final UserService service;
+
+    /*--------------------Основные Admin методы--------------------*/
     @PostMapping
     public UserDto saveUser(@Valid @RequestBody UserDto userDto) {
         return UserMapper.mapToUserDto(service.saveUser(userDto));
     }
 
     @GetMapping
-    public List<UserDto> findUser(@RequestParam(required = false) List<Long> ids,
-                                  @RequestParam(defaultValue = "0") Integer from,
-                                  @RequestParam(defaultValue = "10") Integer size) {
-        return null;
+    public List<UserDto> findUsers(@RequestParam(required = false) List<Long> ids,
+                                   @RequestParam(defaultValue = "0") Integer from,
+                                   @RequestParam(defaultValue = "10") Integer size) {
+        return UserMapper.mapToUserDto(service.findUsers(ids, from, size));
+    }
+
+    @DeleteMapping("/{userId}")
+    public String deleteUser(@PathVariable Long userId) {
+        return service.deleteUser(userId);
     }
 }

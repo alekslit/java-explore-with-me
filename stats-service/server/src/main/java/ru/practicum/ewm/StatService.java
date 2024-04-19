@@ -6,7 +6,7 @@ import java.util.List;
 public interface StatService {
     Stat saveStat(StatDto statDto);
 
-    List<ViewStats> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique);
+    List<ViewStats> getStats(String start, String end, /*String[]*/List<String> uris, Boolean unique);
 
     List<ViewStats> getStatsByAllIp(LocalDateTime start, LocalDateTime end, List<String> uris);
 

@@ -2,6 +2,7 @@ package ru.practicum.ewm.user;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import ru.practicum.ewm.event.dto.UserShortDto;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,5 +34,14 @@ public final class UserMapper {
                 .collect(Collectors.toList());
 
         return userDtoList;
+    }
+
+    public static UserShortDto mapToUserShortDto(User user) {
+        UserShortDto userShortDto = UserShortDto.builder()
+                .id(user.getId())
+                .name(user.getName())
+                .build();
+
+        return userShortDto;
     }
 }
