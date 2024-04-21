@@ -1,14 +1,13 @@
 package ru.practicum.ewm.request;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.request.dto.ParticipationRequestDto;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @RestController
@@ -20,6 +19,7 @@ public class ParticipationRequestController {
 
     /*--------------------Основные User (Private) методы--------------------*/
     @PostMapping("/requests")
+    @ResponseStatus(HttpStatus.CREATED)
     public ParticipationRequestDto saveParticipationRequest(@PathVariable Long userId,
                                                             @RequestParam Long eventId) {
         return ParticipationRequestMapper

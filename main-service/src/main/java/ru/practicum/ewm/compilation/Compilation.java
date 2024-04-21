@@ -28,8 +28,10 @@ public class Compilation {
     private String title;
 
     // список событий входящих в подборку:
-    @OneToMany(fetch = FetchType.LAZY)
-    @JoinColumn(name = "event_id")
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "event_compilations",
+            joinColumns = @JoinColumn(name = "compilation_id"),
+            inverseJoinColumns = @JoinColumn(name = "event_id"))
     @ToString.Exclude
     private List<Event> events;
 }

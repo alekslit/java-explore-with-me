@@ -4,29 +4,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
-import ru.practicum.ewm.StatClient;
-import ru.practicum.ewm.ViewStats;
 import ru.practicum.ewm.category.Category;
 import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventMapper;
 import ru.practicum.ewm.event.EventRepository;
-import ru.practicum.ewm.event.dto.EventFullDto;
-import ru.practicum.ewm.event.dto.EventParticipationCount;
-import ru.practicum.ewm.event.dto.NewOrUpdateEventDto;
+import ru.practicum.ewm.event.dto.NewEventDto;
+import ru.practicum.ewm.event.dto.UpdateEventRequest;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.event.status.EventStatusForUser;
 import ru.practicum.ewm.exception.ConflictOperationException;
 import ru.practicum.ewm.exception.NotFoundException;
-import ru.practicum.ewm.request.ParticipationRequestRepository;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.UserRepository;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static ru.practicum.ewm.exception.ConflictOperationException.*;
 import static ru.practicum.ewm.exception.NotFoundException.*;
@@ -36,18 +30,13 @@ import static ru.practicum.ewm.exception.NotFoundException.*;
 @RequiredArgsConstructor
 public class PrivateEventService implements EventService {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-    private static final String STATS_START = formatter.format(LocalDateTime.now().minusYears(50));
-    private static final String STATS_END = formatter.format(LocalDateTime.now());
-
-    private final StatClient client;
 
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
-    private final ParticipationRequestRepository participationRequestRepository;
 
     /*--------------------Основные методы--------------------*/
-    public Event saveEvent(NewOrUpdateEventDto eventDto, Long userId) {
+    public Event saveEvent(NewEventDto eventDto, Long userId) {
         log.debug("Попытка сохранить новый объект Event.");
         // проверяем существует ли пользователь:
         User user = getUserById(userId);
@@ -59,36 +48,28 @@ public class PrivateEventService implements EventService {
         return event;
     }
 
-    public List<EventFullDto> getAllUserEvent(Long userId, Integer from, Integer size) {
+    public List<Event> getAllUserEvent(Long userId, Integer from, Integer size) {
         log.debug("Попытка получить список объектов Event пользователя.");
         // проверяем существует ли пользователь:
         getUserById(userId);
         // запрашиваем события:
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
         List<Event> eventList = eventRepository.findAllByInitiatorId(userId, pageRequest).getContent();
-        // готовим dto для ответа:
-        List<EventFullDto> eventDtoList = EventMapper.mapToEventFullDto(eventList);
-        if (eventDtoList.isEmpty()) {
-            return eventDtoList;
-        }
 
-        return addViewsAndParticipantCountToEvent(eventDtoList);
+        return eventList;
     }
 
-    public EventFullDto getUserEventById(Long userId, Long eventId) {
+    public Event getUserEventById(Long userId, Long eventId) {
         log.debug("Попытка получить Event пользователя по его eventId.");
         // проверяем существует ли пользователь:
         getUserById(userId);
         // проверяем существует ли событие:
         Event event = getEventById(eventId);
-        // готовим dto для ответа:
-        EventFullDto eventDto = EventMapper.mapToEventFullDto(event);
-        eventDto = addViewsAndParticipantCountToEvent(eventDto);
 
-        return eventDto;
+        return event;
     }
 
-    public EventFullDto updateEvent(NewOrUpdateEventDto eventDto, Long userId, Long eventId) {
+    public Event updateEvent(UpdateEventRequest eventRequest, Long userId, Long eventId) {
         log.debug("Попытка изменить информацию об объекте Event пользователем.");
         // проверяем существует ли пользователь:
         getUserById(userId);
@@ -96,23 +77,17 @@ public class PrivateEventService implements EventService {
         Event event = getEventById(eventId);
         // проверяем существует ли категория события:
         Category category;
-        if (eventDto.getCategory() != null) {
-            category = getCategoryById(eventDto.getCategory());
+        if (eventRequest.getCategory() != null) {
+            category = getCategoryById(eventRequest.getCategory());
         } else {
             category = null;
         }
-        // получаем количество участников в событии:
-        Integer confirmedRequests = participationRequestRepository.getCountConfirmedRequests(eventId);
         // обновляем объект:
-        event = updateEventObject(event, eventDto, category, confirmedRequests);
+        event = updateEventObject(event, eventRequest, category);
         // сохраняем событие:
         event = eventRepository.save(event);
-        // собираем dto объект для ответа (+ просмотры и участники):
-        EventFullDto eventFullDto = EventMapper.mapToEventFullDto(event);
-        eventFullDto.setConfirmedRequests(confirmedRequests);
-        eventFullDto = addViewsToEvent(eventFullDto);
 
-        return eventFullDto;
+        return event;
     }
 
     /*--------------------Вспомогательные методы--------------------*/
@@ -143,94 +118,9 @@ public class PrivateEventService implements EventService {
         return event;
     }
 
-    private List<EventFullDto> addViewsAndParticipantCountToEvent(List<EventFullDto> eventList) {
-        eventList = addViewsToEvent(addParticipantCountToEvent(eventList));
-
-        return eventList;
-    }
-
-    private EventFullDto addViewsAndParticipantCountToEvent(EventFullDto eventDto) {
-        eventDto = addViewsToEvent(addParticipantCountToEvent(eventDto));
-
-        return eventDto;
-    }
-
-    private List<EventFullDto> addViewsToEvent(List<EventFullDto> eventList) {
-        // собираем uris событий для запроса количества просмотров:
-        List<String> eventUris = eventList.stream()
-                .map(event -> "events/" + event.getId())
-                .collect(Collectors.toList());
-        // получаем статистику просмотров:
-        List<ViewStats> statsList = client.getStats(STATS_START, STATS_END, eventUris, false)/*.getBody()*/;
-        // добавляем просмотры к событиям:
-        eventList = eventList.stream()
-                .map(event -> {
-                    String eventId = event.getId().toString();
-                    for (ViewStats stats : statsList) {
-                        String uriId = stats.getUri().substring(stats.getUri().length() - 1);
-                        if (eventId.equals(uriId)) {
-                            event.setViews(stats.getHits());
-                            return event;
-                        }
-                    }
-                    return event;
-                })
-                .collect(Collectors.toList());
-
-        return eventList;
-    }
-
-    private EventFullDto addViewsToEvent(EventFullDto eventFullDto) {
-        // собираем uri события для запроса количества просмотров:
-        String eventUri = "events/" + eventFullDto.getId();
-        // получаем статистику просмотров:
-        List<ViewStats> statsList = client
-                .getStats(null, null, new ArrayList<>(List.of(eventUri)), false)/*.getBody()*/;
-        // добавляем просмотры к событию:
-        if (!statsList.isEmpty()) {
-            eventFullDto.setViews(statsList.get(0).getHits());
-        }
-
-        return eventFullDto;
-    }
-
-    private List<EventFullDto> addParticipantCountToEvent(List<EventFullDto> eventList) {
-        // собираем id-шники событий для запроса количества участников:
-        List<Long> eventUris = eventList.stream()
-                .map(EventFullDto::getId)
-                .collect(Collectors.toList());
-        // получаем количество участников:
-        List<EventParticipationCount> participationCounts = participationRequestRepository
-                .getEventsParticipationCount(eventUris);
-        // добавляем количество участников событию:
-        eventList = eventList.stream()
-                .map(event -> {
-                    for (EventParticipationCount count : participationCounts) {
-                        if (event.getId().equals(count.getEventId())) {
-                            event.setConfirmedRequests(count.getParticipationCount());
-                            return event;
-                        }
-                    }
-                    return event;
-                })
-                .collect(Collectors.toList());
-
-        return eventList;
-    }
-
-    private EventFullDto addParticipantCountToEvent(EventFullDto eventDto) {
-        // получаем количество участников:
-        Integer participantCount = participationRequestRepository.getCountConfirmedRequests(eventDto.getId());
-        // добавляем количество участников событию:
-        eventDto.setConfirmedRequests(participantCount);
-
-        return eventDto;
-    }
-
     private Event updateEventObject(Event event,
-                                    NewOrUpdateEventDto eventDto,
-                                    Category category,
-                                    Integer participantCount) {
+                                    UpdateEventRequest eventRequest,
+                                    Category category) {
         // изменить можно только отмененные события или события в состоянии ожидания модерации:
         if (event.getState().equals(EventStatus.PUBLISHED)) {
             log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
@@ -239,59 +129,73 @@ public class PrivateEventService implements EventService {
                     EVENT_STATUS_CONFLICT_ADVICE);
         }
         // annotation:
-        event.setAnnotation(eventDto.getAnnotation() != null ? eventDto.getAnnotation() : event.getAnnotation());
+        event.setAnnotation(eventRequest.getAnnotation() != null ?
+                eventRequest.getAnnotation() : event.getAnnotation());
         // category:
         event.setCategory(category != null ? category : event.getCategory());
         // description:
-        event.setDescription(eventDto.getDescription() != null ? eventDto.getDescription() : event.getDescription());
+        event.setDescription(eventRequest.getDescription() != null ?
+                eventRequest.getDescription() : event.getDescription());
         // eventDate:
-        event.setEventDate(eventDto.getEventDate() != null ?
-                LocalDateTime.parse(eventDto.getEventDate(), formatter) : event.getEventDate());
+        event.setEventDate(eventRequest.getEventDate() != null ?
+                LocalDateTime.parse(eventRequest.getEventDate(), formatter) : event.getEventDate());
         // location:
-        if (eventDto.getLocation() != null) {
-            event.setLat(eventDto.getLocation().getLat());
-            event.setLon(eventDto.getLocation().getLon());
+        if (eventRequest.getLocation() != null) {
+            event.setLat(eventRequest.getLocation().getLat());
+            event.setLon(eventRequest.getLocation().getLon());
         }
         // paid:
-        event.setPaid(eventDto.getPaid() != null ? eventDto.getPaid() : event.getPaid());
+        event.setPaid(eventRequest.getPaid() != null ? eventRequest.getPaid() : event.getPaid());
         // participantLimit:
-        event = updateEventParticipantLimit(event, eventDto, participantCount);
+        event = updateEventParticipantLimit(event, eventRequest);
         // requestModeration:
-        event.setRequestModeration(eventDto.getRequestModeration() != null ?
-                eventDto.getRequestModeration() : event.getRequestModeration());
+        event.setRequestModeration(eventRequest.getRequestModeration() != null ?
+                eventRequest.getRequestModeration() : event.getRequestModeration());
         // title:
-        event.setTitle(eventDto.getTitle() != null ? eventDto.getTitle() : event.getTitle());
+        event.setTitle(eventRequest.getTitle() != null ? eventRequest.getTitle() : event.getTitle());
         // state:
-        event = updateEventState(event, eventDto);
+        event = updateEventState(event, eventRequest);
 
         return event;
     }
 
-    private Event updateEventParticipantLimit(Event event, NewOrUpdateEventDto eventDto, Integer participantCount) {
-        if (eventDto.getParticipantLimit() != null &&
-                eventDto.getParticipantLimit() != 0 &&
-                eventDto.getParticipantLimit() < participantCount) {
+    private Event updateEventParticipantLimit(Event event, UpdateEventRequest eventRequest) {
+        if (eventRequest.getParticipantLimit() != null &&
+                eventRequest.getParticipantLimit() != 0 &&
+                eventRequest.getParticipantLimit() < event.getConfirmedRequests()) {
             log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
                     CONFLICT_UPDATE_EVENT_MESSAGE, event.getId());
             throw new ConflictOperationException(CONFLICT_UPDATE_EVENT_MESSAGE + event.getId(),
-                    LOW_PARTICIPANT_LIMIT_ADVICE + String.format("participantLimit = %d < participantCount = %d",
-                            eventDto.getParticipantLimit(), participantCount));
-        } else if (eventDto.getParticipantLimit() != null) {
-            event.setParticipantLimit(eventDto.getParticipantLimit());
+                    LOW_PARTICIPANT_LIMIT_ADVICE + String.format("participantLimit = %d < participantLimit = %d",
+                            eventRequest.getParticipantLimit(), event.getConfirmedRequests()));
+        } else if (eventRequest.getParticipantLimit() != null) {
+            event.setParticipantLimit(eventRequest.getParticipantLimit());
+        }
+        // available (возможность для аренды):
+        event = updateEventAvailable(event);
+
+        return event;
+    }
+
+    private Event updateEventState(Event event, UpdateEventRequest eventRequest) {
+        if (eventRequest.getStateAction() == null) {
+            return event;
+        }
+        switch (EventStatusForUser.valueOf(eventRequest.getStateAction())) {
+            case SEND_TO_REVIEW:
+                event.setState(EventStatus.PENDING);
+                return event;
+            case CANCEL_REVIEW:
+                event.setState(EventStatus.CANCELED);
+                return event;
         }
 
         return event;
     }
 
-    private Event updateEventState(Event event, NewOrUpdateEventDto eventDto) {
-        switch (EventStatusForUser.valueOf(eventDto.getStateAction())) {
-            case SEND_TO_REVIEW:
-                    event.setState(EventStatus.PENDING);
-                    return event;
-            case CANCEL_REVIEW:
-                    event.setState(EventStatus.CANCELED);
-                    return event;
-
+    private Event updateEventAvailable(Event event) {
+        if (event.getParticipantLimit() > 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
+            event.setAvailable(false);
         }
 
         return event;

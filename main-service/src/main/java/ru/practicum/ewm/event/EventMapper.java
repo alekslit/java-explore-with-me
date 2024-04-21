@@ -7,7 +7,7 @@ import ru.practicum.ewm.category.CategoryMapper;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
 import ru.practicum.ewm.event.dto.Location;
-import ru.practicum.ewm.event.dto.NewOrUpdateEventDto;
+import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.UserMapper;
@@ -21,10 +21,11 @@ import java.util.stream.Collectors;
 public final class EventMapper {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    public static Event mapToEvent(NewOrUpdateEventDto eventDto, User user, Category category) {
+    public static Event mapToEvent(NewEventDto eventDto, User user, Category category) {
         Event event = Event.builder()
                 .annotation(eventDto.getAnnotation())
                 .category(category)
+                .confirmedRequests(0L)
                 .createdOn(LocalDateTime.now())
                 .description(eventDto.getDescription())
                 .eventDate(LocalDateTime.parse(eventDto.getEventDate(), formatter))
@@ -36,6 +37,7 @@ public final class EventMapper {
                 .requestModeration(eventDto.getRequestModeration() != null ? eventDto.getRequestModeration() : true)
                 .state(EventStatus.PENDING)
                 .title(eventDto.getTitle())
+                .views(0L)
                 .available(true)
                 .build();
 
@@ -47,6 +49,7 @@ public final class EventMapper {
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.mapToCategoryDto(event.getCategory()))
+                .confirmedRequests(event.getConfirmedRequests())
                 .createdOn(formatter.format(event.getCreatedOn()))
                 .description(event.getDescription())
                 .eventDate(formatter.format(event.getEventDate()))
@@ -61,6 +64,7 @@ public final class EventMapper {
                 .requestModeration(event.getRequestModeration())
                 .state(event.getState().toString())
                 .title(event.getTitle())
+                .views(event.getViews())
                 .build();
 
         return eventFullDto;
@@ -79,10 +83,12 @@ public final class EventMapper {
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.mapToCategoryDto(event.getCategory()))
+                .confirmedRequests(event.getConfirmedRequests())
                 .eventDate(formatter.format(event.getEventDate()))
                 .initiator(UserMapper.mapToUserShortDto(event.getInitiator()))
                 .paid(event.getPaid())
                 .title(event.getTitle())
+                .views(event.getViews())
                 .build();
 
         return eventShortDto;

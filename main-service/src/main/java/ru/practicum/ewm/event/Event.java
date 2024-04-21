@@ -31,6 +31,10 @@ public class Event {
     @ToString.Exclude
     private Category category;
 
+    // количество одобренных заявок на участие в данном событии:
+    @Column(name = "confirmed_requests")
+    private Long confirmedRequests;
+
     // дата и время создания события (в формате "yyyy-MM-dd HH:mm:ss"):
     @Column(name = "creation_date")
     private LocalDateTime createdOn;
@@ -63,7 +67,7 @@ public class Event {
 
     // ограничение на количество участников, значение 0 - означает отсутствие ограничения (default: 0):
     @Column(name = "participant_limit")
-    private Integer participantLimit;
+    private Long participantLimit;
 
     // дата и время публикации события (в формате "yyyy-MM-dd HH:mm:ss"):
     @Column(name = "published_date")
@@ -81,6 +85,10 @@ public class Event {
     // заголовок события:
     @Column(name = "title")
     private String title;
+
+    // количество просмотров события:
+    @Column(name = "views")
+    private Long views;
 
     // доступность для участия (есть ли свободные места):
     @Column(name = "available")

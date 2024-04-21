@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
@@ -25,11 +24,11 @@ public class StatServiceImpl implements StatService {
     }
 
     @Override
-    public List<ViewStats> getStats(String start, String end, /*String[]*/List<String> uris, Boolean unique) {
+    public List<ViewStats> getStats(String start, String end, List<String> uris, Boolean unique) {
         if (unique) {
-            return getStatsByUniqueIp(parseToLocalDateTime(start), parseToLocalDateTime(end), /*arrayToList(*/uris/*)*/);
+            return getStatsByUniqueIp(parseToLocalDateTime(start), parseToLocalDateTime(end), uris);
         } else {
-            return getStatsByAllIp(parseToLocalDateTime(start), parseToLocalDateTime(end), /*arrayToList(*/uris/*)*/);
+            return getStatsByAllIp(parseToLocalDateTime(start), parseToLocalDateTime(end), uris);
         }
     }
 
@@ -57,14 +56,5 @@ public class StatServiceImpl implements StatService {
         } else {
             return null;
         }
-    }
-
-    private List<String> arrayToList(String[] uris) {
-        if (uris == null) {
-            return null;
-        }
-        List<String> urisList = Arrays.asList(uris);
-
-        return urisList;
     }
 }

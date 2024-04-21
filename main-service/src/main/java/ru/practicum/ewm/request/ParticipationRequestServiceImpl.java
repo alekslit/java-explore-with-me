@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.practicum.ewm.exception.AlreadyExistException.*;
+import static ru.practicum.ewm.exception.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_ADVICE;
+import static ru.practicum.ewm.exception.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_MESSAGE;
 import static ru.practicum.ewm.exception.ConflictOperationException.*;
 import static ru.practicum.ewm.exception.NotFoundException.*;
 
@@ -53,6 +54,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     String.format(" userId = %d, eventId = %d.", userId, eventId),
                     DUPLICATE_PARTICIPATION_REQUEST_ADVICE);
         }
+        // проверим нужно ли обновить количество участников в событии и доступность для участия:
+        checkEventConfirmedRequestAndAvailable(participationRequest);
 
         return participationRequest;
     }
@@ -63,12 +66,16 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         // проверим, существует ли пользователь:
         User requester = getUserById(userId);
         // проверим, существует ли запрос на участие:
-        ParticipationRequest participationRequest = getParticipationRequestById(requestId);
+        ParticipationRequest participationRequestDb = getParticipationRequestById(requestId);
         // меняем статус и обновляем данные:
-        participationRequest.setStatus(ParticipationRequestStatus.REJECTED);
-        participationRequest = participationRequestRepository.save(participationRequest);
+        ParticipationRequest resultParticipationRequest = participationRequestDb;
+        resultParticipationRequest.setStatus(ParticipationRequestStatus.REJECTED);
+        resultParticipationRequest = participationRequestRepository.save(participationRequestDb);
+        resultParticipationRequest.setStatus(ParticipationRequestStatus.CANCELED);
+        // проверим нужно ли обновить количество участников в событии и доступность для участия:
+        checkEventConfirmedRequestAndAvailable(participationRequestDb);
 
-        return participationRequest;
+        return resultParticipationRequest;
     }
 
     @Override
@@ -99,8 +106,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         User user = getUserById(userId);
         // проверим есть ли событие с таким id:
         Event event = getEventById(eventId);
-        // получим число подтверждённых участников в событии:
-        Integer confirmedRequests = participationRequestRepository.getCountConfirmedRequests(eventId);
         // получим заявки, которые нужно изменить:
         List<ParticipationRequest> participationRequestList = participationRequestRepository
                 .findAllByEventIdAndIdIn(eventId, request.getRequestIds());
@@ -108,7 +113,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         checkRequestStatusOnConflict(participationRequestList, request.getRequestIds());
         // обновляем заявки:
         List<ParticipationRequest> updateRequests = updateParticipationRequestObject(request,
-                event, confirmedRequests, participationRequestList);
+                event, participationRequestList);
         participationRequestRepository.saveAll(updateRequests);
         // подготавливаем dto для ответа:
         EventRequestStatusUpdateResult result = ParticipationRequestMapper.mapToStatusUpdateResult(updateRequests);
@@ -138,11 +143,11 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private ParticipationRequest getParticipationRequestById(Long requestId) {
         ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
                 .orElseThrow(() -> {
-            log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(),
-                    PARTICIPATION_REQUEST_NOT_FOUND_MESSAGE, requestId);
-            return new NotFoundException(PARTICIPATION_REQUEST_NOT_FOUND_MESSAGE + requestId,
-                    PARTICIPATION_REQUEST_NOT_FOUND_ADVICE);
-        });
+                    log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(),
+                            PARTICIPATION_REQUEST_NOT_FOUND_MESSAGE, requestId);
+                    return new NotFoundException(PARTICIPATION_REQUEST_NOT_FOUND_MESSAGE + requestId,
+                            PARTICIPATION_REQUEST_NOT_FOUND_ADVICE);
+                });
 
         return participationRequest;
     }
@@ -163,7 +168,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     String.format(" userId = %d, eventId = %d.", userId, eventId), EVENT_IS_NOT_PUBLISHED_ADVICE);
         }
         // проверим лимит запросов на участие:
-        Integer confirmedRequests = participationRequestRepository.getCountConfirmedRequests(eventId);
+        Long confirmedRequests = participationRequestRepository.getCountConfirmedRequests(eventId);
         if (event.getParticipantLimit() > 0 && event.getParticipantLimit().equals(confirmedRequests)) {
             log.debug("{}: {} userId = {}, eventId = {}.", ConflictOperationException.class.getSimpleName(),
                     CONFLICT_SAVE_PARTICIPATION_REQUEST_MESSAGE, userId, eventId);
@@ -187,21 +192,20 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
     private List<ParticipationRequest> updateParticipationRequestObject(EventRequestStatusUpdateRequest request,
                                                                         Event event,
-                                                                        Integer confirmedRequests,
                                                                         List<ParticipationRequest> requestList) {
         // собираем список заявок для обновления:
         List<ParticipationRequest> updateRequests = new ArrayList<>();
         switch (ParticipationRequestStatus.valueOf(request.getStatus())) {
             case CONFIRMED:
                 // нельзя подтвердить заявку, если уже достигнут лимит по заявкам на данное событие:
-                if (event.getParticipantLimit().equals(confirmedRequests)) {
+                if (event.getParticipantLimit().equals(event.getConfirmedRequests())) {
                     log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
                             CONFLICT_UPDATE_PARTICIPATION_REQUEST_MESSAGE, request.getRequestIds());
                     throw new ConflictOperationException(CONFLICT_UPDATE_PARTICIPATION_REQUEST_MESSAGE +
                             request.getRequestIds(), PARTICIPANT_COUNT_IS_MAX_ADVICE);
                 } else {
-                    Integer countParticipants = confirmedRequests;
-                    for (ParticipationRequest req: requestList) {
+                    Long countParticipants = event.getConfirmedRequests();
+                    for (ParticipationRequest req : requestList) {
                         if (countParticipants < event.getParticipantLimit()) {
                             req.setStatus(ParticipationRequestStatus.CONFIRMED);
                             updateRequests.add(req);
@@ -212,10 +216,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                             req.setStatus(ParticipationRequestStatus.REJECTED);
                             updateRequests.add(req);
                         }
-                        // обновим доступность события для участия, если достигнут лимит:
-                        if (confirmedRequests.equals(event.getParticipantLimit())) {
-                            updateEventAvailable(event);
-                        }
+                        // обновим информацию о количестве участников и доступности события:
+                        updateEventParticipantsAndAvailable(event, countParticipants);
                     }
 
                     return updateRequests;
@@ -231,8 +233,32 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         return updateRequests;
     }
 
-    private void updateEventAvailable(Event event) {
-        event.setAvailable(false);
+    private void updateEventParticipantsAndAvailable(Event event, Long countParticipants) {
+        event.setConfirmedRequests(countParticipants);
+        if (event.getParticipantLimit() > 0 && event.getConfirmedRequests().equals(event.getParticipantLimit())) {
+            event.setAvailable(false);
+        } else {
+            event.setAvailable(true);
+        }
+
         eventRepository.save(event);
+    }
+
+    private void checkEventConfirmedRequestAndAvailable(ParticipationRequest participationRequest) {
+        if (participationRequest.getStatus().equals(ParticipationRequestStatus.CONFIRMED)) {
+            Long confirmedRequest = participationRequestRepository
+                    .getCountConfirmedRequests(participationRequest.getEvent().getId());
+            // обновим количество участников в событии:
+            Event event = participationRequest.getEvent();
+            event.setConfirmedRequests(confirmedRequest);
+            // проверим доступность аренды (available):
+            if (event.getParticipantLimit() > 0 && event.getConfirmedRequests().equals(event.getParticipantLimit())) {
+                event.setAvailable(false);
+            } else {
+                event.setAvailable(true);
+            }
+
+            eventRepository.save(event);
+        }
     }
 }

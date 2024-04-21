@@ -6,7 +6,7 @@ import javax.validation.constraints.Size;
 import java.util.List;
 
 @Data
-public class NewOrUpdateCompilationDto {
+public class UpdateCompilationRequest {
     // список идентификаторов событий входящих в подборку:
     private List<Long> events;
 

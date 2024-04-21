@@ -3,12 +3,12 @@ package ru.practicum.ewm.event.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
-import java.time.LocalDateTime;
 
 @Data
 @Builder(toBuilder = true)
-public class NewOrUpdateEventDto {
+public class UpdateEventRequest {
     // краткое описание события:
     @Size(min = 20, max = 2000, message = "Слишком длинное или слишком короткое краткое описание события " +
             "(annotation). Длинна краткого описания события должна быть от {min} до {max} символов.")
@@ -32,7 +32,9 @@ public class NewOrUpdateEventDto {
     private Boolean paid;
 
     // ограничение на количество участников, значение 0 - означает отсутствие ограничения:
-    private Integer participantLimit;
+    @PositiveOrZero(message = "Ограничение на количество участников (participantLimit) " +
+            "может быть положительным числом или нулём.")
+    private Long participantLimit;
 
     // Нужна ли пре-модерация заявок на участие.
     // Если true, то все заявки будут ожидать подтверждения инициатором события.

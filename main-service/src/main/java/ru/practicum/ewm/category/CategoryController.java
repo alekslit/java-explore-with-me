@@ -1,6 +1,7 @@
 package ru.practicum.ewm.category;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.category.service.AdminCategoryService;
 import ru.practicum.ewm.category.service.PublicCategoryService;
@@ -16,6 +17,7 @@ public class CategoryController {
 
     /*--------------------Основные Admin методы--------------------*/
     @PostMapping("admin/categories")
+    @ResponseStatus(HttpStatus.CREATED)
     public CategoryDto saveCategory(@Valid @RequestBody CategoryDto categoryDto) {
         return CategoryMapper.mapToCategoryDto(adminService.saveCategory(categoryDto));
     }
@@ -27,6 +29,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("admin/categories/{catId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     public String deleteCategory(@PathVariable Long catId) {
         return adminService.deleteCategory(catId);
     }

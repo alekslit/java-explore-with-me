@@ -16,25 +16,48 @@ public class ErrorHandler {
     /*------Обработчики для статуса 400 (Bad request)------*/
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
+    public ErrorResponse handleNotAvailableException(final NotAvailableException e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .error("Ошибка валидации данных из запроса.")
-                .adviceToUser(e.getMessage())
+                .error(e.getMessage())
+                .adviceToUser(e.getAdviceToUser())
                 .build();
-        log.debug("{}: {}", ConstraintViolationException.class.getSimpleName(), e.getMessage());
+        log.debug("{}: {}", e.getClass().getSimpleName(), e.getMessage());
 
         return errorResponse;
     }
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleMethodArgumentNotValidException(final MissingServletRequestParameterException e) {
+    public ErrorResponse handleConstraintViolationException(final ConstraintViolationException e) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error("Ошибка валидации данных из запроса.")
+                .adviceToUser(e.getMessage())
+                .build();
+        log.debug("{}: {}", e.getClass().getSimpleName(), e.getMessage());
+
+        return errorResponse;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMissingServletRequestParameterException(final MissingServletRequestParameterException e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .error("Отсутствует обязательный параметр запроса.")
                 .adviceToUser(String.format("Параметр запроса %s не может быть пустым.", e.getParameterName()))
                 .build();
-        log.debug("{}: {} {}", MethodArgumentNotValidException.class.getSimpleName(),
-                errorResponse.getError(), errorResponse.getAdviceToUser());
+        log.debug("{}: {} {}", e.getClass().getSimpleName(), errorResponse.getError(), errorResponse.getAdviceToUser());
+
+        return errorResponse;
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .error("Ошибка валидации данных из запроса.")
+                .adviceToUser(e.getFieldError().getDefaultMessage())
+                .build();
+        log.debug("{}: {}", e.getClass().getSimpleName(), e.getFieldError().getDefaultMessage());
 
         return errorResponse;
     }
@@ -56,18 +79,6 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.CONFLICT)
     public ErrorResponse handleAlreadyExistException(final AlreadyExistException e) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .error(e.getMessage())
-                .adviceToUser(e.getAdviceToUser())
-                .build();
-        log.debug("{}: {}", e.getClass().getSimpleName(), e.getMessage());
-
-        return errorResponse;
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleForbiddenDateTimeException(final ForbiddenDateTimeException e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .error(e.getMessage())
                 .adviceToUser(e.getAdviceToUser())

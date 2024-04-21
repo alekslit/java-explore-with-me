@@ -2,9 +2,8 @@ package ru.practicum.ewm.compilation;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import ru.practicum.ewm.category.CategoryDto;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
-import ru.practicum.ewm.compilation.dto.NewOrUpdateCompilationDto;
+import ru.practicum.ewm.compilation.dto.NewCompilationDto;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventMapper;
 
@@ -13,7 +12,7 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class CompilationMapper {
-    public static Compilation mapToCompilation(NewOrUpdateCompilationDto compilationDto, List<Event> events) {
+    public static Compilation mapToCompilation(NewCompilationDto compilationDto, List<Event> events) {
         Compilation compilation = Compilation.builder()
                 .pinned(compilationDto.getPinned() != null ? compilationDto.getPinned() : false)
                 .title(compilationDto.getTitle())

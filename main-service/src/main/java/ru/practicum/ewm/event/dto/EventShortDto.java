@@ -4,8 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.ewm.category.CategoryDto;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder(toBuilder = true)
 public class EventShortDto {
@@ -16,7 +14,7 @@ public class EventShortDto {
     // категория события:
     private CategoryDto category;
     // количество одобренных заявок на участие в данном событии:
-    private Integer confirmedRequests;
+    private Long confirmedRequests;
     // дата и время на которые намечено событие (в формате "yyyy-MM-dd HH:mm:ss"):
     private String eventDate;
     // пользователь, создатель события:

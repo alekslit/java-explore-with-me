@@ -4,8 +4,6 @@ import lombok.Builder;
 import lombok.Data;
 import ru.practicum.ewm.category.CategoryDto;
 
-import java.time.LocalDateTime;
-
 @Data
 @Builder(toBuilder = true)
 public class EventFullDto {
@@ -16,7 +14,7 @@ public class EventFullDto {
     // категория события:
     private CategoryDto category;
     // количество одобренных заявок на участие в данном событии:
-    private Integer confirmedRequests;
+    private Long confirmedRequests;
     // дата и время создания события (в формате "yyyy-MM-dd HH:mm:ss"):
     private String createdOn;
     // полное описание события:
@@ -30,7 +28,7 @@ public class EventFullDto {
     // нужно ли оплачивать участие в событии:
     private Boolean paid;
     // ограничение на количество участников, значение 0 - означает отсутствие ограничения:
-    private Integer participantLimit;
+    private Long participantLimit;
     // дата и время публикации события (в формате "yyyy-MM-dd HH:mm:ss"):
     private String publishedOn;
     // нужна ли пре-модерация заявок на участие:
@@ -39,6 +37,6 @@ public class EventFullDto {
     private String state;
     // заголовок события:
     private String title;
-    // количество просмотрев события:
+    // количество просмотров события:
     private Long views;
 }

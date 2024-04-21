@@ -1,6 +1,7 @@
 package ru.practicum.ewm.request.dto;
 
 import lombok.Data;
+
 import java.util.List;
 
 /*----------Объект для принятия запроса на изменение статуса запроса на участие----------*/

@@ -4,6 +4,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import ru.practicum.ewm.event.status.EventStatus;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +21,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "  AND (CAST(:rangeStart AS timestamp) IS NULL OR e.eventDate >= :rangeStart) " +
             "  AND (CAST(:rangeEnd AS timestamp) IS NULL OR e.eventDate <= :rangeEnd)")
     Page<Event> getAllEvents(List<Long> users,
-                             List<String> states,
+                             List<EventStatus> states,
                              List<Long> categories,
                              LocalDateTime rangeStart,
                              LocalDateTime rangeEnd,
@@ -39,14 +40,14 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "  AND (:onlyAvailable IS NULL OR e.available = :onlyAvailable) " +
             "  AND (e.state = 'PUBLISHED')")
     Page<Event> getAllPublishedEvent(String text,
-                                     List<String> categories,
+                                     List<Long> categories,
                                      Boolean paid,
                                      LocalDateTime rangeStart,
                                      LocalDateTime rangeEnd,
                                      Boolean onlyAvailable,
                                      Pageable pageable);
 
-    Optional<Event> findByIdAndState(Long eventId, String state);
+    Optional<Event> findByIdAndState(Long eventId, EventStatus state);
 
     List<Event> findAllByIdIn(List<Long> eventIds);
 }
