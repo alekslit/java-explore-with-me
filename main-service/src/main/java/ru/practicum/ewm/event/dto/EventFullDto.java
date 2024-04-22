@@ -8,35 +8,35 @@ import ru.practicum.ewm.category.CategoryDto;
 @Builder(toBuilder = true)
 public class EventFullDto {
     // идентификатор события:
-    private Long id;
+    private final Long id;
     // краткое описание события:
-    private String annotation;
+    private final String annotation;
     // категория события:
-    private CategoryDto category;
+    private final CategoryDto category;
     // количество одобренных заявок на участие в данном событии:
-    private Long confirmedRequests;
+    private final Long confirmedRequests;
     // дата и время создания события (в формате "yyyy-MM-dd HH:mm:ss"):
-    private String createdOn;
+    private final String createdOn;
     // полное описание события:
-    private String description;
+    private final String description;
     // дата и время на которые намечено событие (в формате "yyyy-MM-dd HH:mm:ss"):
-    private String eventDate;
+    private final String eventDate;
     // пользователь, создатель события:
-    private UserShortDto initiator;
+    private final UserShortDto initiator;
     // широта и долгота места проведения события:
-    private Location location;
+    private final Location location;
     // нужно ли оплачивать участие в событии:
-    private Boolean paid;
+    private final Boolean paid;
     // ограничение на количество участников, значение 0 - означает отсутствие ограничения:
-    private Long participantLimit;
+    private final Long participantLimit;
     // дата и время публикации события (в формате "yyyy-MM-dd HH:mm:ss"):
-    private String publishedOn;
+    private final String publishedOn;
     // нужна ли пре-модерация заявок на участие:
-    private Boolean requestModeration;
+    private final Boolean requestModeration;
     // состояние события:
-    private String state;
+    private final String state;
     // заголовок события:
-    private String title;
+    private final String title;
     // количество просмотров события:
-    private Long views;
+    private final Long views;
 }

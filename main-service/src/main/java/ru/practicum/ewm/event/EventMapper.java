@@ -22,7 +22,7 @@ public final class EventMapper {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static Event mapToEvent(NewEventDto eventDto, User user, Category category) {
-        Event event = Event.builder()
+        return Event.builder()
                 .annotation(eventDto.getAnnotation())
                 .category(category)
                 .confirmedRequests(0L)
@@ -40,12 +40,10 @@ public final class EventMapper {
                 .views(0L)
                 .available(true)
                 .build();
-
-        return event;
     }
 
     public static EventFullDto mapToEventFullDto(Event event) {
-        EventFullDto eventFullDto = EventFullDto.builder()
+        return EventFullDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.mapToCategoryDto(event.getCategory()))
@@ -66,20 +64,16 @@ public final class EventMapper {
                 .title(event.getTitle())
                 .views(event.getViews())
                 .build();
-
-        return eventFullDto;
     }
 
     public static List<EventFullDto> mapToEventFullDto(List<Event> eventList) {
-        List<EventFullDto> eventFullDtoList = eventList.stream()
+        return eventList.stream()
                 .map(EventMapper::mapToEventFullDto)
                 .collect(Collectors.toList());
-
-        return eventFullDtoList;
     }
 
     public static EventShortDto mapToEventShortDto(Event event) {
-        EventShortDto eventShortDto = EventShortDto.builder()
+        return EventShortDto.builder()
                 .id(event.getId())
                 .annotation(event.getAnnotation())
                 .category(CategoryMapper.mapToCategoryDto(event.getCategory()))
@@ -90,15 +84,11 @@ public final class EventMapper {
                 .title(event.getTitle())
                 .views(event.getViews())
                 .build();
-
-        return eventShortDto;
     }
 
     public static List<EventShortDto> mapToEventShortDto(List<Event> eventList) {
-        List<EventShortDto> eventShortDtoList = eventList.stream()
+        return eventList.stream()
                 .map(EventMapper::mapToEventShortDto)
                 .collect(Collectors.toList());
-
-        return eventShortDtoList;
     }
 }

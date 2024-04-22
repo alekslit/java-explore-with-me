@@ -7,6 +7,9 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import ru.practicum.ewm.exception.conflict.AlreadyExistException;
+import ru.practicum.ewm.exception.conflict.ConflictOperationException;
+import ru.practicum.ewm.exception.conflict.CustomConflictException;
 
 import javax.validation.ConstraintViolationException;
 
@@ -76,21 +79,9 @@ public class ErrorHandler {
     }
 
     /*------Обработчики для статуса 409 (Conflict)------*/
-    @ExceptionHandler
+    @ExceptionHandler({AlreadyExistException.class, ConflictOperationException.class})
     @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleAlreadyExistException(final AlreadyExistException e) {
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .error(e.getMessage())
-                .adviceToUser(e.getAdviceToUser())
-                .build();
-        log.debug("{}: {}", e.getClass().getSimpleName(), e.getMessage());
-
-        return errorResponse;
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.CONFLICT)
-    public ErrorResponse handleConflictOperationException(final ConflictOperationException e) {
+    public ErrorResponse handleConflictOperationException(final CustomConflictException e) {
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .error(e.getMessage())
                 .adviceToUser(e.getAdviceToUser())

@@ -1,8 +1,6 @@
-package ru.practicum.ewm.exception;
+package ru.practicum.ewm.exception.conflict;
 
-public class ConflictOperationException extends RuntimeException {
-    private final String adviceToUser;
-
+public class ConflictOperationException extends CustomConflictException {
     public static final String CONFLICT_CATEGORY_DELETE_MESSAGE = "Невозможно удалить категорию с таким id. id = ";
     public static final String CONFLICT_CATEGORY_DELETE_ADVICE = "Категорию можно удалить, только если с ней " +
             "не связано ни одного события.";
@@ -30,11 +28,6 @@ public class ConflictOperationException extends RuntimeException {
             "по заявкам на данное событие.";
 
     public ConflictOperationException(String message, String adviceToUser) {
-        super(message);
-        this.adviceToUser = adviceToUser;
-    }
-
-    public String getAdviceToUser() {
-        return adviceToUser;
+        super(message, adviceToUser);
     }
 }

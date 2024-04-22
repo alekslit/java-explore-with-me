@@ -13,8 +13,8 @@ import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.event.status.EventStatusForUser;
-import ru.practicum.ewm.exception.ConflictOperationException;
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.exception.conflict.ConflictOperationException;
 import ru.practicum.ewm.user.User;
 import ru.practicum.ewm.user.UserRepository;
 
@@ -22,13 +22,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-import static ru.practicum.ewm.exception.ConflictOperationException.*;
 import static ru.practicum.ewm.exception.NotFoundException.*;
+import static ru.practicum.ewm.exception.conflict.ConflictOperationException.*;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PrivateEventService implements EventService {
+public class PrivateEventService {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final UserRepository userRepository;
@@ -42,10 +42,9 @@ public class PrivateEventService implements EventService {
         User user = getUserById(userId);
         // проверяем существует ли категория события:
         Category category = getCategoryById(eventDto.getCategory());
-        // сохраняем событие:
-        Event event = eventRepository.save(EventMapper.mapToEvent(eventDto, user, category));
 
-        return event;
+        // сохраняем событие:
+        return eventRepository.save(EventMapper.mapToEvent(eventDto, user, category));
     }
 
     public List<Event> getAllUserEvent(Long userId, Integer from, Integer size) {
@@ -54,19 +53,17 @@ public class PrivateEventService implements EventService {
         getUserById(userId);
         // запрашиваем события:
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
-        List<Event> eventList = eventRepository.findAllByInitiatorId(userId, pageRequest).getContent();
 
-        return eventList;
+        return eventRepository.findAllByInitiatorId(userId, pageRequest).getContent();
     }
 
     public Event getUserEventById(Long userId, Long eventId) {
         log.debug("Попытка получить Event пользователя по его eventId.");
         // проверяем существует ли пользователь:
         getUserById(userId);
-        // проверяем существует ли событие:
-        Event event = getEventById(eventId);
 
-        return event;
+        // проверяем существует ли событие:
+        return getEventById(eventId);
     }
 
     public Event updateEvent(UpdateEventRequest eventRequest, Long userId, Long eventId) {
@@ -83,44 +80,37 @@ public class PrivateEventService implements EventService {
             category = null;
         }
         // обновляем объект:
-        event = updateEventObject(event, eventRequest, category);
-        // сохраняем событие:
-        event = eventRepository.save(event);
+        updateEventObject(event, eventRequest, category);
 
-        return event;
+        // сохраняем событие:
+        return eventRepository.save(event);
     }
 
     /*--------------------Вспомогательные методы--------------------*/
     private User getUserById(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> {
+        return userRepository.findById(userId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), USER_NOT_FOUND_MESSAGE, userId);
             return new NotFoundException(USER_NOT_FOUND_MESSAGE + userId, USER_NOT_FOUND_ADVICE);
         });
-
-        return user;
     }
 
     private Category getCategoryById(Long catId) {
-        Category category = categoryRepository.findById(catId).orElseThrow(() -> {
+        return categoryRepository.findById(catId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), CATEGORY_NOT_FOUND_MESSAGE, catId);
             return new NotFoundException(CATEGORY_NOT_FOUND_MESSAGE + catId, CATEGORY_NOT_FOUND_ADVICE);
         });
-
-        return category;
     }
 
     private Event getEventById(Long eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+        return eventRepository.findById(eventId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), EVENT_NOT_FOUND_MESSAGE, eventId);
             return new NotFoundException(EVENT_NOT_FOUND_MESSAGE + eventId, EVENT_NOT_FOUND_ADVICE);
         });
-
-        return event;
     }
 
-    private Event updateEventObject(Event event,
-                                    UpdateEventRequest eventRequest,
-                                    Category category) {
+    private void updateEventObject(Event event,
+                                   UpdateEventRequest eventRequest,
+                                   Category category) {
         // изменить можно только отмененные события или события в состоянии ожидания модерации:
         if (event.getState().equals(EventStatus.PUBLISHED)) {
             log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
@@ -147,19 +137,17 @@ public class PrivateEventService implements EventService {
         // paid:
         event.setPaid(eventRequest.getPaid() != null ? eventRequest.getPaid() : event.getPaid());
         // participantLimit:
-        event = updateEventParticipantLimit(event, eventRequest);
+        updateEventParticipantLimit(event, eventRequest);
         // requestModeration:
         event.setRequestModeration(eventRequest.getRequestModeration() != null ?
                 eventRequest.getRequestModeration() : event.getRequestModeration());
         // title:
         event.setTitle(eventRequest.getTitle() != null ? eventRequest.getTitle() : event.getTitle());
         // state:
-        event = updateEventState(event, eventRequest);
-
-        return event;
+        updateEventState(event, eventRequest);
     }
 
-    private Event updateEventParticipantLimit(Event event, UpdateEventRequest eventRequest) {
+    private void updateEventParticipantLimit(Event event, UpdateEventRequest eventRequest) {
         if (eventRequest.getParticipantLimit() != null &&
                 eventRequest.getParticipantLimit() != 0 &&
                 eventRequest.getParticipantLimit() < event.getConfirmedRequests()) {
@@ -171,33 +159,29 @@ public class PrivateEventService implements EventService {
         } else if (eventRequest.getParticipantLimit() != null) {
             event.setParticipantLimit(eventRequest.getParticipantLimit());
         }
-        // available (возможность для аренды):
-        event = updateEventAvailable(event);
 
-        return event;
+        // available (возможность для аренды):
+        updateEventAvailable(event);
     }
 
-    private Event updateEventState(Event event, UpdateEventRequest eventRequest) {
+    private void updateEventState(Event event, UpdateEventRequest eventRequest) {
         if (eventRequest.getStateAction() == null) {
-            return event;
+            return;
         }
         switch (EventStatusForUser.valueOf(eventRequest.getStateAction())) {
             case SEND_TO_REVIEW:
                 event.setState(EventStatus.PENDING);
-                return event;
+                return;
             case CANCEL_REVIEW:
                 event.setState(EventStatus.CANCELED);
-                return event;
+                return;
+            default:
         }
-
-        return event;
     }
 
-    private Event updateEventAvailable(Event event) {
+    private void updateEventAvailable(Event event) {
         if (event.getParticipantLimit() > 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
             event.setAvailable(false);
         }
-
-        return event;
     }
 }

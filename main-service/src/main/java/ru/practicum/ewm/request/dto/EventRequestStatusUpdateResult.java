@@ -10,7 +10,7 @@ import java.util.List;
 @Builder(toBuilder = true)
 public class EventRequestStatusUpdateResult {
     // подтверждённые запросы:
-    private List<ParticipationRequestDto> confirmedRequests;
+    private final List<ParticipationRequestDto> confirmedRequests;
     // отклонённые запросы:
-    private List<ParticipationRequestDto> rejectedRequests;
+    private final List<ParticipationRequestDto> rejectedRequests;
 }

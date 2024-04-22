@@ -23,19 +23,16 @@ public class PublicCategoryService implements CategoryService {
     public List<Category> getCategories(Integer from, Integer size) {
         log.debug("Попытка получить список объектов Category.");
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
-        List<Category> categoryList = categoryRepository.findAll(pageRequest).getContent();
 
-        return categoryList;
+        return categoryRepository.findAll(pageRequest).getContent();
     }
 
     @Override
     public Category getCategoryById(Long catId) {
         log.debug("Попытка получить объект Category по его id.");
-        Category category = categoryRepository.findById(catId).orElseThrow(() -> {
+        return categoryRepository.findById(catId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), CATEGORY_NOT_FOUND_MESSAGE, catId);
             return new NotFoundException(CATEGORY_NOT_FOUND_MESSAGE + catId, CATEGORY_NOT_FOUND_ADVICE);
         });
-
-        return category;
     }
 }

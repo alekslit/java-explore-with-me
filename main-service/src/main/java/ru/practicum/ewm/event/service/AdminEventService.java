@@ -11,21 +11,21 @@ import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.event.status.EventStatusForAdmin;
-import ru.practicum.ewm.exception.ConflictOperationException;
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.exception.conflict.ConflictOperationException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.practicum.ewm.exception.ConflictOperationException.*;
 import static ru.practicum.ewm.exception.NotFoundException.*;
+import static ru.practicum.ewm.exception.conflict.ConflictOperationException.*;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class AdminEventService implements EventService {
+public class AdminEventService {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final EventRepository eventRepository;
@@ -41,10 +41,9 @@ public class AdminEventService implements EventService {
                                     Integer size) {
         log.debug("Попытка получить список объектов Event по фильтрам.");
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
-        List<Event> eventList = eventRepository.getAllEvents(users, mapToEventStatus(states), categories,
-                parseToLocalDateTime(rangeStart), parseToLocalDateTime(rangeEnd), pageRequest).getContent();
 
-        return eventList;
+        return eventRepository.getAllEvents(users, mapToEventStatus(states), categories,
+                parseToLocalDateTime(rangeStart), parseToLocalDateTime(rangeEnd), pageRequest).getContent();
     }
 
     public Event updateEvent(UpdateEventRequest eventRequest, Long eventId) {
@@ -59,30 +58,25 @@ public class AdminEventService implements EventService {
             category = null;
         }
         // обновляем объект:
-        event = updateEventObject(event, eventRequest, category);
-        // сохраняем событие:
-        event = eventRepository.save(event);
+        updateEventObject(event, eventRequest, category);
 
-        return event;
+        // сохраняем событие:
+        return eventRepository.save(event);
     }
 
     /*--------------------Вспомогательные методы--------------------*/
     private Event getEventById(Long eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+        return eventRepository.findById(eventId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), EVENT_NOT_FOUND_MESSAGE, eventId);
             return new NotFoundException(EVENT_NOT_FOUND_MESSAGE + eventId, EVENT_NOT_FOUND_ADVICE);
         });
-
-        return event;
     }
 
     private Category getCategoryById(Long catId) {
-        Category category = categoryRepository.findById(catId).orElseThrow(() -> {
+        return categoryRepository.findById(catId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), CATEGORY_NOT_FOUND_MESSAGE, catId);
             return new NotFoundException(CATEGORY_NOT_FOUND_MESSAGE + catId, CATEGORY_NOT_FOUND_ADVICE);
         });
-
-        return category;
     }
 
     private LocalDateTime parseToLocalDateTime(String time) {
@@ -94,9 +88,9 @@ public class AdminEventService implements EventService {
         }
     }
 
-    private Event updateEventObject(Event event,
-                                    UpdateEventRequest eventRequest,
-                                    Category category) {
+    private void updateEventObject(Event event,
+                                   UpdateEventRequest eventRequest,
+                                   Category category) {
         // annotation:
         event.setAnnotation(eventRequest.getAnnotation() != null ?
                 eventRequest.getAnnotation() : event.getAnnotation());
@@ -116,19 +110,17 @@ public class AdminEventService implements EventService {
         // paid:
         event.setPaid(eventRequest.getPaid() != null ? eventRequest.getPaid() : event.getPaid());
         // participantLimit:
-        event = updateEventParticipantLimit(event, eventRequest);
+        updateEventParticipantLimit(event, eventRequest);
         // requestModeration:
         event.setRequestModeration(eventRequest.getRequestModeration() != null ?
                 eventRequest.getRequestModeration() : event.getRequestModeration());
         // title:
         event.setTitle(eventRequest.getTitle() != null ? eventRequest.getTitle() : event.getTitle());
         // state:
-        event = updateEventState(event, eventRequest);
-
-        return event;
+        updateEventState(event, eventRequest);
     }
 
-    private Event updateEventParticipantLimit(Event event, UpdateEventRequest eventRequest) {
+    private void updateEventParticipantLimit(Event event, UpdateEventRequest eventRequest) {
         if (eventRequest.getParticipantLimit() != null &&
                 eventRequest.getParticipantLimit() != 0 &&
                 eventRequest.getParticipantLimit() < event.getConfirmedRequests()) {
@@ -140,15 +132,15 @@ public class AdminEventService implements EventService {
         } else if (eventRequest.getParticipantLimit() != null) {
             event.setParticipantLimit(eventRequest.getParticipantLimit());
         }
-        // available (возможность для аренды):
-        event = updateEventAvailable(event);
 
-        return event;
+        // available (возможность для аренды):
+        updateEventAvailable(event);
+
     }
 
-    private Event updateEventState(Event event, UpdateEventRequest eventRequest) {
+    private void updateEventState(Event event, UpdateEventRequest eventRequest) {
         if (eventRequest.getStateAction() == null) {
-            return event;
+            return;
         }
         switch (EventStatusForAdmin.valueOf(eventRequest.getStateAction())) {
             // если пытаемся опубликовать:
@@ -159,7 +151,7 @@ public class AdminEventService implements EventService {
                         event.getState().equals(EventStatus.PENDING)) {
                     event.setState(EventStatus.PUBLISHED);
                     event.setPublishedOn(LocalDateTime.now());
-                    return event;
+                    return;
                 } else {
                     log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
                             CONFLICT_UPDATE_EVENT_MESSAGE, event.getId());
@@ -172,34 +164,30 @@ public class AdminEventService implements EventService {
                 // событие можно отклонить, только если оно еще не опубликовано:
                 if (!event.getState().equals(EventStatus.PUBLISHED)) {
                     event.setState(EventStatus.CANCELED);
-                    return event;
+                    return;
                 } else {
                     log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
                             CONFLICT_UPDATE_EVENT_MESSAGE, event.getId());
                     throw new ConflictOperationException(CONFLICT_UPDATE_EVENT_MESSAGE + event.getId(),
                             CANCELED_CONFLICT_ADVICE);
                 }
+                // ничего не делаем:
+            default:
         }
-
-        return event;
     }
 
     private List<EventStatus> mapToEventStatus(List<String> stringList) {
         if (stringList == null) {
             return null;
         }
-        List<EventStatus> stateList = stringList.stream()
+        return stringList.stream()
                 .map(EventStatus::valueOf)
                 .collect(Collectors.toList());
-
-        return stateList;
     }
 
-    private Event updateEventAvailable(Event event) {
+    private void updateEventAvailable(Event event) {
         if (event.getParticipantLimit() > 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
             event.setAvailable(false);
         }
-
-        return event;
     }
 }

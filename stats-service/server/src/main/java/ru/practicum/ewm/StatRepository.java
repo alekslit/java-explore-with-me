@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface StatRepository extends JpaRepository<Stat, Long> {
     @Query("SELECT new ru.practicum.ewm.ViewStats(s.app, s.uri, COUNT(s.ip)) " +
@@ -26,4 +27,9 @@ public interface StatRepository extends JpaRepository<Stat, Long> {
             "         s.uri " +
             "ORDER BY COUNT(DISTINCT s.ip) DESC")
     List<ViewStats> getStatsByUniqueIp(LocalDateTime start, LocalDateTime end, List<String> uris);
+
+    @Query("SELECT COUNT(DISTINCT s.ip) " +
+            "FROM Stat AS s " +
+            "WHERE s.uri = :uri")
+    Optional<Long> getUniqueViewsByUri(String uri);
 }

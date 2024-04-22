@@ -18,9 +18,7 @@ public class StatServiceImpl implements StatService {
     @Override
     public Stat saveStat(StatDto statDto) {
         log.debug("Попытка сохранить новый объект Stat.");
-        Stat stat = repository.save(StatMapper.mapToStat(statDto));
-
-        return stat;
+        return repository.save(StatMapper.mapToStat(statDto));
     }
 
     @Override
@@ -35,17 +33,20 @@ public class StatServiceImpl implements StatService {
     @Override
     public List<ViewStats> getStatsByAllIp(LocalDateTime start, LocalDateTime end, List<String> uris) {
         log.debug("Попытка получить список ViewStats.");
-        List<ViewStats> stats = repository.getStatsByAllIp(start, end, uris);
-
-        return stats;
+        return repository.getStatsByAllIp(start, end, uris);
     }
 
     @Override
     public List<ViewStats> getStatsByUniqueIp(LocalDateTime start, LocalDateTime end, List<String> uris) {
         log.debug("Попытка получить список ViewStats по уникальным IP.");
-        List<ViewStats> stats = repository.getStatsByUniqueIp(start, end, uris);
+        return repository.getStatsByUniqueIp(start, end, uris);
+    }
 
-        return stats;
+    @Override
+    public Long getUniqueViewsByUri(String uri) {
+        log.debug("Попытка получить количество просмотров по уникальным IP.");
+        // если не нашли, значит просмотров 0:
+        return repository.getUniqueViewsByUri(uri).orElse(0L);
     }
 
     /*---------------Вспомогательные методы---------------*/

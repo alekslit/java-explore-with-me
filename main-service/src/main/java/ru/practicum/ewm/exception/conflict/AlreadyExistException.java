@@ -1,6 +1,6 @@
-package ru.practicum.ewm.exception;
+package ru.practicum.ewm.exception.conflict;
 
-public class AlreadyExistException extends RuntimeException {
+public class AlreadyExistException extends CustomConflictException {
     public static final String DUPLICATE_USER_EMAIL_MESSAGE = "Пользователь с таким email уже существует. email = ";
     public static final String DUPLICATE_USER_EMAIL_ADVICE = "Пожалуйста, замените email.";
     public static final String DUPLICATE_CATEGORY_NAME_MESSAGE = "Категория с таким названием уже существует. name = ";
@@ -13,14 +13,7 @@ public class AlreadyExistException extends RuntimeException {
             "title = ";
     public static final String DUPLICATE_COMPILATION_NAME_ADVICE = "Пожалуйста замените заголовок подборки.";
 
-    private final String adviceToUser;
-
     public AlreadyExistException(String message, String adviceToUser) {
-        super(message);
-        this.adviceToUser = adviceToUser;
-    }
-
-    public String getAdviceToUser() {
-        return adviceToUser;
+        super(message, adviceToUser);
     }
 }

@@ -11,4 +11,6 @@ public interface StatService {
     List<ViewStats> getStatsByAllIp(LocalDateTime start, LocalDateTime end, List<String> uris);
 
     List<ViewStats> getStatsByUniqueIp(LocalDateTime start, LocalDateTime end, List<String> uris);
+
+    Long getUniqueViewsByUri(String uri);
 }

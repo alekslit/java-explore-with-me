@@ -8,13 +8,13 @@ import java.util.List;
 @Data
 public class UpdateCompilationRequest {
     // список идентификаторов событий входящих в подборку:
-    private List<Long> events;
+    private final List<Long> events;
 
     // закреплена ли подборка на главной странице сайта:
-    private Boolean pinned;
+    private final Boolean pinned;
 
     // заголовок подборки:
     @Size(min = 1, max = 50, message = "Слишком длинный или слишком короткий заголовок подборки " +
             "(title). Длинна заголовка подборки должна быть от {min} до {max} символов.")
-    private String title;
+    private final String title;
 }

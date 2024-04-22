@@ -10,38 +10,30 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class UserMapper {
     public static User mapToUser(UserDto userDto) {
-        User user = User.builder()
+        return User.builder()
                 .name(userDto.getName())
                 .email(userDto.getEmail())
                 .build();
-
-        return user;
     }
 
     public static UserDto mapToUserDto(User user) {
-        UserDto userDto = UserDto.builder()
+        return UserDto.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
                 .build();
-
-        return userDto;
     }
 
     public static List<UserDto> mapToUserDto(List<User> users) {
-        List<UserDto> userDtoList = users.stream()
+        return users.stream()
                 .map(UserMapper::mapToUserDto)
                 .collect(Collectors.toList());
-
-        return userDtoList;
     }
 
     public static UserShortDto mapToUserShortDto(User user) {
-        UserShortDto userShortDto = UserShortDto.builder()
+        return UserShortDto.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .build();
-
-        return userShortDto;
     }
 }

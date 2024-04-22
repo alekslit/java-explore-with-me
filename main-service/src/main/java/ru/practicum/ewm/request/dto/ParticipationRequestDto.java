@@ -7,13 +7,13 @@ import lombok.Data;
 @Builder(toBuilder = true)
 public class ParticipationRequestDto {
     // идентификатор заявки на участие в событии:
-    private Long id;
+    private final Long id;
     // идентификатор пользователя, который отправил заявку:
-    private Long requester;
+    private final Long requester;
     // идентификатор события, на участие в котором составлена заявка:
-    private Long event;
+    private final Long event;
     // статус заявки:
-    private String status;
+    private final String status;
     // дата и время создания заявки:
-    private String created;
+    private final String created;
 }

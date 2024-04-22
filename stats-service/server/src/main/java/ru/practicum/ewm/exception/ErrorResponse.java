@@ -6,6 +6,6 @@ import lombok.Data;
 @Data
 @Builder
 public class ErrorResponse {
-    private String error;
-    private String adviceToUser;
+    private final String error;
+    private final String adviceToUser;
 }

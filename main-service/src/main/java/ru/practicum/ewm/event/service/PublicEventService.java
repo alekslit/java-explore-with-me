@@ -6,7 +6,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.StatClient;
 import ru.practicum.ewm.StatDto;
-import ru.practicum.ewm.ViewStats;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.status.EventStatus;
@@ -15,7 +14,6 @@ import ru.practicum.ewm.exception.NotFoundException;
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -26,7 +24,7 @@ import static ru.practicum.ewm.exception.NotFoundException.EVENT_NOT_FOUND_MESSA
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PublicEventService implements EventService {
+public class PublicEventService {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final StatClient client;
@@ -75,10 +73,9 @@ public class PublicEventService implements EventService {
         // нужно сохранить в сервисе статистики:
         saveStats(request);
         // обновим информацию о просмотрах по этому событию в БД:
-        event = addViewsToEvent(event);
-        event = eventRepository.save(event);
+        addViewsToEvent(event);
 
-        return event;
+        return eventRepository.save(event);
     }
 
     /*--------------------Вспомогательные методы--------------------*/
@@ -90,18 +87,13 @@ public class PublicEventService implements EventService {
         }
     }
 
-    private Event addViewsToEvent(Event event) {
-        String statsStart = formatter.format(LocalDateTime.now().minusYears(50));
-        String statsEnd = formatter.format(LocalDateTime.now().plusHours(1));
+    private void addViewsToEvent(Event event) {
         // собираем uri события для запроса количества просмотров:
         String eventUri = "/events/" + event.getId();
-        // получаем статистику просмотров:
-        List<ViewStats> statsList = client
-                .getStats(statsStart, statsEnd, new ArrayList<>(List.of(eventUri)), true);
+        // получаем количество просмотров:
+        Long viewsCount = client.getUniqueViewsByUri(eventUri);
         // добавляем просмотры к событию:
-        event.setViews(!statsList.isEmpty() ? statsList.get(0).getHits() : event.getViews());
-
-        return event;
+        event.setViews(viewsCount);
     }
 
     private List<Event> sortedEventList(List<Event> eventList, String sort) {
@@ -117,9 +109,9 @@ public class PublicEventService implements EventService {
                 return eventList.stream()
                         .sorted(Comparator.comparing(Event::getViews))
                         .collect(Collectors.toList());
+            default:
+                return eventList;
         }
-
-        return eventList;
     }
 
     private void saveStats(HttpServletRequest request) {

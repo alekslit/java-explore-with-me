@@ -7,9 +7,9 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.status.EventStatus;
-import ru.practicum.ewm.exception.AlreadyExistException;
-import ru.practicum.ewm.exception.ConflictOperationException;
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.exception.conflict.AlreadyExistException;
+import ru.practicum.ewm.exception.conflict.ConflictOperationException;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateRequest;
 import ru.practicum.ewm.request.dto.EventRequestStatusUpdateResult;
 import ru.practicum.ewm.user.User;
@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static ru.practicum.ewm.exception.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_ADVICE;
-import static ru.practicum.ewm.exception.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_MESSAGE;
-import static ru.practicum.ewm.exception.ConflictOperationException.*;
 import static ru.practicum.ewm.exception.NotFoundException.*;
+import static ru.practicum.ewm.exception.conflict.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_ADVICE;
+import static ru.practicum.ewm.exception.conflict.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_MESSAGE;
+import static ru.practicum.ewm.exception.conflict.ConflictOperationException.*;
 
 @Service
 @Slf4j
@@ -64,7 +64,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public ParticipationRequest cancelParticipationRequest(Long userId, Long requestId) {
         log.debug("Попытка отменить запрос на участие в событии (ParticipationRequest).");
         // проверим, существует ли пользователь:
-        User requester = getUserById(userId);
+        getUserById(userId);
         // проверим, существует ли запрос на участие:
         ParticipationRequest participationRequestDb = getParticipationRequestById(requestId);
         // меняем статус и обновляем данные:
@@ -83,18 +83,14 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         log.debug("Попытка получить список объектов ParticipationRequest по id пользователя.");
         // проверим, существует ли пользователь:
         getUserById(userId);
-        List<ParticipationRequest> participationRequests = participationRequestRepository.findAllByRequesterId(userId);
 
-        return participationRequests;
+        return participationRequestRepository.findAllByRequesterId(userId);
     }
 
     @Override
     public List<ParticipationRequest> getEventOwnerParticipationRequests(Long userId, Long eventId) {
         log.debug("Попытка получить список объектов ParticipationRequest автором события.");
-        List<ParticipationRequest> participationRequests = participationRequestRepository
-                .findAllByEventId(eventId);
-
-        return participationRequests;
+        return participationRequestRepository.findAllByEventId(eventId);
     }
 
     @Override
@@ -103,7 +99,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                                                                             Long eventId) {
         log.debug("Попытка обновить статусы объектов ParticipationRequest события пользователя.");
         // проверим, существует ли пользователь:
-        User user = getUserById(userId);
+        getUserById(userId);
         // проверим есть ли событие с таким id:
         Event event = getEventById(eventId);
         // получим заявки, которые нужно изменить:
@@ -115,41 +111,33 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         List<ParticipationRequest> updateRequests = updateParticipationRequestObject(request,
                 event, participationRequestList);
         participationRequestRepository.saveAll(updateRequests);
-        // подготавливаем dto для ответа:
-        EventRequestStatusUpdateResult result = ParticipationRequestMapper.mapToStatusUpdateResult(updateRequests);
 
-        return result;
+        return ParticipationRequestMapper.mapToStatusUpdateResult(updateRequests);
     }
 
     /*--------------------Вспомогательные методы--------------------*/
     private User getUserById(Long userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> {
+        return userRepository.findById(userId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), USER_NOT_FOUND_MESSAGE, userId);
             return new NotFoundException(USER_NOT_FOUND_MESSAGE + userId, USER_NOT_FOUND_ADVICE);
         });
-
-        return user;
     }
 
     private Event getEventById(Long eventId) {
-        Event event = eventRepository.findById(eventId).orElseThrow(() -> {
+        return eventRepository.findById(eventId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), EVENT_NOT_FOUND_MESSAGE, eventId);
             return new NotFoundException(EVENT_NOT_FOUND_MESSAGE + eventId, EVENT_NOT_FOUND_ADVICE);
         });
-
-        return event;
     }
 
     private ParticipationRequest getParticipationRequestById(Long requestId) {
-        ParticipationRequest participationRequest = participationRequestRepository.findById(requestId)
+        return participationRequestRepository.findById(requestId)
                 .orElseThrow(() -> {
                     log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(),
                             PARTICIPATION_REQUEST_NOT_FOUND_MESSAGE, requestId);
                     return new NotFoundException(PARTICIPATION_REQUEST_NOT_FOUND_MESSAGE + requestId,
                             PARTICIPATION_REQUEST_NOT_FOUND_ADVICE);
                 });
-
-        return participationRequest;
     }
 
     private void checkEventOnConflict(Event event, Long userId, Long eventId) {
@@ -228,9 +216,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                         .peek(req -> req.setStatus(ParticipationRequestStatus.REJECTED))
                         .collect(Collectors.toList());
                 return updateRequests;
+            default:
+                return requestList;
         }
-
-        return updateRequests;
     }
 
     private void updateEventParticipantsAndAvailable(Event event, Long countParticipants) {

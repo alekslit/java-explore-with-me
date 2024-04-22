@@ -3,6 +3,7 @@ package ru.practicum.ewm.event;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.EventShortDto;
@@ -15,6 +16,8 @@ import ru.practicum.ewm.exception.NotAvailableException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -24,6 +27,7 @@ import static ru.practicum.ewm.exception.NotAvailableException.*;
 @RestController
 @RequiredArgsConstructor
 @Slf4j
+@Validated
 public class EventController {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -41,9 +45,12 @@ public class EventController {
     }
 
     @GetMapping("/users/{userId}/events")
-    public List<EventFullDto> getAllUserEvent(@PathVariable Long userId,
-                                              @RequestParam(defaultValue = "0") Integer from,
-                                              @RequestParam(defaultValue = "10") Integer size) {
+    public List<EventFullDto> getAllUserEvent(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = "Параметр запроса from, должен быть " +
+                    "положительным числом или нулём.") Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = "Параметр запроса size, должен быть " +
+                    "положительным числом.") Integer size) {
         return EventMapper.mapToEventFullDto(privateService.getAllUserEvent(userId, from, size));
     }
 
@@ -63,13 +70,16 @@ public class EventController {
 
     /*--------------------Основные Admin методы--------------------*/
     @GetMapping("/admin/events")
-    public List<EventFullDto> getAllEvents(@RequestParam(required = false) List<Long> users,
-                                           @RequestParam(required = false) List<String> states,
-                                           @RequestParam(required = false) List<Long> categories,
-                                           @RequestParam(required = false) String rangeStart,
-                                           @RequestParam(required = false) String rangeEnd,
-                                           @RequestParam(defaultValue = "0") Integer from,
-                                           @RequestParam(defaultValue = "10") Integer size) {
+    public List<EventFullDto> getAllEvents(
+            @RequestParam(required = false) List<Long> users,
+            @RequestParam(required = false) List<String> states,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) String rangeStart,
+            @RequestParam(required = false) String rangeEnd,
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = "Параметр запроса from, должен быть " +
+                    "положительным числом или нулём.") Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = "Параметр запроса size, должен быть " +
+                    "положительным числом.") Integer size) {
 
         return EventMapper.mapToEventFullDto(adminService
                 .getAllEvents(users, states, categories, rangeStart, rangeEnd, from, size));
@@ -84,17 +94,21 @@ public class EventController {
 
     /*--------------------Основные Public методы--------------------*/
     @GetMapping("/events")
-    public List<EventShortDto> getAllPublishedEvent(@RequestParam(required = false) String text,
-                                                    @RequestParam(required = false) List<Long> categories,
-                                                    @RequestParam(required = false) Boolean paid,
-                                                    @RequestParam(required = false) String rangeStart,
-                                                    @RequestParam(required = false) String rangeEnd,
-                                                    @RequestParam(defaultValue = "false") Boolean onlyAvailable,
-                                                    @RequestParam(required = false) String sort,
-                                                    @RequestParam(defaultValue = "0") Integer from,
-                                                    @RequestParam(defaultValue = "10") Integer size,
-                                                    HttpServletRequest request) {
+    public List<EventShortDto> getAllPublishedEvent(
+            @RequestParam(required = false) String text,
+            @RequestParam(required = false) List<Long> categories,
+            @RequestParam(required = false) Boolean paid,
+            @RequestParam(required = false) String rangeStart,
+            @RequestParam(required = false) String rangeEnd,
+            @RequestParam(defaultValue = "false") Boolean onlyAvailable,
+            @RequestParam(required = false) String sort,
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = "Параметр запроса from, должен быть " +
+                    "положительным числом или нулём.") Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = "Параметр запроса size, должен быть " +
+                    "положительным числом.") Integer size,
+            HttpServletRequest request) {
         checkRequestDateTime(rangeStart, rangeEnd);
+
         return EventMapper.mapToEventShortDto(publicService
                 .getAllPublishedEvent(text, categories, paid, rangeStart, rangeEnd,
                         onlyAvailable, sort, from, size, request));

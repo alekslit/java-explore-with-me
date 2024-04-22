@@ -35,6 +35,11 @@ public class StatController {
         return service.getStats(start, end, uris, unique);
     }
 
+    @GetMapping("/stats/views")
+    public Long getUniqueViewsByUri(@RequestParam String uri) {
+        return service.getUniqueViewsByUri(uri);
+    }
+
     /*---------------Вспомогательные методы (валидация запроса)---------------*/
     private void checkRequestDateTime(String start, String end) {
         if (start == null || end == null) {

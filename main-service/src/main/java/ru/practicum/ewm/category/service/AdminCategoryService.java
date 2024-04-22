@@ -9,16 +9,16 @@ import ru.practicum.ewm.category.CategoryDto;
 import ru.practicum.ewm.category.CategoryMapper;
 import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.event.EventRepository;
-import ru.practicum.ewm.exception.AlreadyExistException;
-import ru.practicum.ewm.exception.ConflictOperationException;
 import ru.practicum.ewm.exception.NotFoundException;
+import ru.practicum.ewm.exception.conflict.AlreadyExistException;
+import ru.practicum.ewm.exception.conflict.ConflictOperationException;
 
-import static ru.practicum.ewm.exception.AlreadyExistException.DUPLICATE_CATEGORY_NAME_ADVICE;
-import static ru.practicum.ewm.exception.AlreadyExistException.DUPLICATE_CATEGORY_NAME_MESSAGE;
-import static ru.practicum.ewm.exception.ConflictOperationException.CONFLICT_CATEGORY_DELETE_ADVICE;
-import static ru.practicum.ewm.exception.ConflictOperationException.CONFLICT_CATEGORY_DELETE_MESSAGE;
 import static ru.practicum.ewm.exception.NotFoundException.CATEGORY_NOT_FOUND_ADVICE;
 import static ru.practicum.ewm.exception.NotFoundException.CATEGORY_NOT_FOUND_MESSAGE;
+import static ru.practicum.ewm.exception.conflict.AlreadyExistException.DUPLICATE_CATEGORY_NAME_ADVICE;
+import static ru.practicum.ewm.exception.conflict.AlreadyExistException.DUPLICATE_CATEGORY_NAME_MESSAGE;
+import static ru.practicum.ewm.exception.conflict.ConflictOperationException.CONFLICT_CATEGORY_DELETE_ADVICE;
+import static ru.practicum.ewm.exception.conflict.ConflictOperationException.CONFLICT_CATEGORY_DELETE_MESSAGE;
 
 @Service
 @Slf4j
@@ -56,15 +56,13 @@ public class AdminCategoryService implements CategoryService {
     /*----------------Вспомогательные методы----------------*/
     private Category saveCategoryObject(Category category) {
         try {
-            category = categoryRepository.save(category);
+            return categoryRepository.save(category);
         } catch (DataIntegrityViolationException e) {
             log.debug("{}: {}{}.", AlreadyExistException.class.getSimpleName(),
                     DUPLICATE_CATEGORY_NAME_MESSAGE, category.getName());
             throw new AlreadyExistException(DUPLICATE_CATEGORY_NAME_MESSAGE + category.getName(),
                     DUPLICATE_CATEGORY_NAME_ADVICE);
         }
-
-        return category;
     }
 
     private Category updateCategoryObject(CategoryDto categoryDto, Long catId) {
@@ -79,12 +77,10 @@ public class AdminCategoryService implements CategoryService {
     @Override
     public Category getCategoryById(Long catId) {
         log.debug("Попытка получить объект Category по его id.");
-        Category category = categoryRepository.findById(catId).orElseThrow(() -> {
+        return categoryRepository.findById(catId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), CATEGORY_NOT_FOUND_MESSAGE, catId);
             return new NotFoundException(CATEGORY_NOT_FOUND_MESSAGE + catId, CATEGORY_NOT_FOUND_ADVICE);
         });
-
-        return category;
     }
 
     private void checkEventInCategory(Long catId) {

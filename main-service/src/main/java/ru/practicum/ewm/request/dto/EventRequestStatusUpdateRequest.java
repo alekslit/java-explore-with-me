@@ -8,8 +8,8 @@ import java.util.List;
 @Data
 public class EventRequestStatusUpdateRequest {
     // идентификаторы запросов на участие в событии текущего пользователя:
-    private List<Long> requestIds;
+    private final List<Long> requestIds;
 
     // новый статус запроса на участие в событии текущего пользователя:
-    private String status;
+    private final String status;
 }

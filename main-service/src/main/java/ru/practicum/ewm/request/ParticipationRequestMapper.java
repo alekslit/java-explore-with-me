@@ -17,35 +17,29 @@ public final class ParticipationRequestMapper {
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public static ParticipationRequest mapToParticipationRequest(User requester, Event event) {
-        ParticipationRequest participationRequest = ParticipationRequest.builder()
+        return ParticipationRequest.builder()
                 .event(event)
                 .requester(requester)
                 .status(event.getRequestModeration().equals(false) || event.getParticipantLimit() == 0 ?
                         ParticipationRequestStatus.CONFIRMED : ParticipationRequestStatus.PENDING)
                 .created(LocalDateTime.now())
                 .build();
-
-        return participationRequest;
     }
 
     public static ParticipationRequestDto mapToParticipationRequestDto(ParticipationRequest participationRequest) {
-        ParticipationRequestDto participationRequestDto = ParticipationRequestDto.builder()
+        return ParticipationRequestDto.builder()
                 .id(participationRequest.getId())
                 .event(participationRequest.getEvent().getId())
                 .requester(participationRequest.getRequester().getId())
                 .status(participationRequest.getStatus().toString())
                 .created(formatter.format(participationRequest.getCreated()))
                 .build();
-
-        return participationRequestDto;
     }
 
     public static List<ParticipationRequestDto> mapToParticipationRequestDto(List<ParticipationRequest> requestList) {
-        List<ParticipationRequestDto> requestDtoList = requestList.stream()
+        return requestList.stream()
                 .map(ParticipationRequestMapper::mapToParticipationRequestDto)
                 .collect(Collectors.toList());
-
-        return requestDtoList;
     }
 
     public static EventRequestStatusUpdateResult mapToStatusUpdateResult(List<ParticipationRequest> requestList) {
@@ -55,11 +49,10 @@ public final class ParticipationRequestMapper {
         List<ParticipationRequest> rejectedRequests = requestList.stream()
                 .filter(req -> req.getStatus().equals(ParticipationRequestStatus.REJECTED))
                 .collect(Collectors.toList());
-        EventRequestStatusUpdateResult result = EventRequestStatusUpdateResult.builder()
+
+        return EventRequestStatusUpdateResult.builder()
                 .confirmedRequests(ParticipationRequestMapper.mapToParticipationRequestDto(confirmedRequests))
                 .rejectedRequests(ParticipationRequestMapper.mapToParticipationRequestDto(rejectedRequests))
                 .build();
-
-        return result;
     }
 }

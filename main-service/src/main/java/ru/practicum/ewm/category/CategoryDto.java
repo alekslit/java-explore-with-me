@@ -10,11 +10,11 @@ import javax.validation.constraints.Size;
 @Builder(toBuilder = true)
 public class CategoryDto {
     // идентификатор категории:
-    private Long id;
+    private final Long id;
 
     // название категории;
     @NotBlank(message = "Название категории (name) не может быть пустым.")
     @Size(min = 1, max = 50, message = "Слишком длинное или слишком короткое название категории. " +
             "Длинна названия категории должна быть от {min} до {max} символов.")
-    private String name;
+    private final String name;
 }

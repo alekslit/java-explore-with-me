@@ -2,6 +2,7 @@ package ru.practicum.ewm.compilation;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.ewm.compilation.dto.CompilationDto;
 import ru.practicum.ewm.compilation.dto.NewCompilationDto;
@@ -10,10 +11,13 @@ import ru.practicum.ewm.compilation.service.AdminCompilationService;
 import ru.practicum.ewm.compilation.service.PublicCompilationService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Validated
 public class CompilationController {
     private final AdminCompilationService adminService;
     private final PublicCompilationService publicService;
@@ -39,9 +43,12 @@ public class CompilationController {
 
     /*--------------------Основные Public методы--------------------*/
     @GetMapping("/compilations")
-    public List<CompilationDto> getAllCompilations(@RequestParam(required = false) Boolean pinned,
-                                                   @RequestParam(defaultValue = "0") Integer from,
-                                                   @RequestParam(defaultValue = "10") Integer size) {
+    public List<CompilationDto> getAllCompilations(
+            @RequestParam(required = false) Boolean pinned,
+            @RequestParam(defaultValue = "0") @PositiveOrZero(message = "Параметр запроса from, должен быть " +
+                    "положительным числом или нулём.") Integer from,
+            @RequestParam(defaultValue = "10") @Positive(message = "Параметр запроса size, должен быть " +
+                    "положительным числом.") Integer size) {
         return CompilationMapper.mapToCompilationDto(publicService.getAllCompilations(pinned, from, size));
     }
 

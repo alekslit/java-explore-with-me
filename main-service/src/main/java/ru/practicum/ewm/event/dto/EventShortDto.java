@@ -8,21 +8,21 @@ import ru.practicum.ewm.category.CategoryDto;
 @Builder(toBuilder = true)
 public class EventShortDto {
     // идентификатор события:
-    private Long id;
+    private final Long id;
     // краткое описание события:
-    private String annotation;
+    private final String annotation;
     // категория события:
-    private CategoryDto category;
+    private final CategoryDto category;
     // количество одобренных заявок на участие в данном событии:
-    private Long confirmedRequests;
+    private final Long confirmedRequests;
     // дата и время на которые намечено событие (в формате "yyyy-MM-dd HH:mm:ss"):
-    private String eventDate;
+    private final String eventDate;
     // пользователь, создатель события:
-    private UserShortDto initiator;
+    private final UserShortDto initiator;
     // нужно ли оплачивать участие в событии:
-    private Boolean paid;
+    private final Boolean paid;
     // заголовок события:
-    private String title;
+    private final String title;
     // количество просмотрев события:
-    private Long views;
+    private final Long views;
 }

@@ -16,7 +16,7 @@ import static ru.practicum.ewm.exception.NotFoundException.COMPILATION_NOT_FOUND
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PublicCompilationService implements CompilationService {
+public class PublicCompilationService {
     private final CompilationRepository compilationRepository;
 
     /*--------------------Основные методы--------------------*/
@@ -24,28 +24,23 @@ public class PublicCompilationService implements CompilationService {
         log.debug("Попытка получить список объектов Compilation.");
         // получаем список:
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
-        List<Compilation> compilations = pinned == null ?
+
+        return pinned == null ?
                 compilationRepository.findAll(pageRequest).getContent() :
                 compilationRepository.findAllByPinned(pinned, pageRequest).getContent();
-
-        return compilations;
     }
 
     public Compilation getCompilationById(Long compId) {
-        log.debug("Попытка объект Compilation по его id.");
+        log.debug("Попытка получить объект Compilation по его id.");
         // проверим, существует ли подборка с таким id:
-        Compilation compilation = getById(compId);
-
-        return compilation;
+        return getById(compId);
     }
 
     /*---------------Вспомогательные методы---------------*/
     private Compilation getById(Long compId) {
-        Compilation compilation = compilationRepository.findById(compId).orElseThrow(() -> {
+        return compilationRepository.findById(compId).orElseThrow(() -> {
             log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), COMPILATION_NOT_FOUND_MESSAGE, compId);
             return new NotFoundException(COMPILATION_NOT_FOUND_MESSAGE + compId, COMPILATION_NOT_FOUND_ADVICE);
         });
-
-        return compilation;
     }
 }

@@ -7,7 +7,7 @@ import lombok.Data;
 @Builder(toBuilder = true)
 public class Location {
     // широта:
-    private Double lat;
+    private final Double lat;
     // долгота:
-    private Double lon;
+    private final Double lon;
 }
