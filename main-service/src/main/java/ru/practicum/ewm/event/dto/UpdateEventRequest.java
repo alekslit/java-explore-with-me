@@ -1,14 +1,16 @@
 package ru.practicum.ewm.event.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 
-@Data
-@Builder(toBuilder = true)
-public class UpdateEventRequest {
+@Getter
+@ToString
+@AllArgsConstructor
+public final class UpdateEventRequest {
     // краткое описание события:
     @Size(min = 20, max = 2000, message = "Слишком длинное или слишком короткое краткое описание события " +
             "(annotation). Длинна краткого описания события должна быть от {min} до {max} символов.")

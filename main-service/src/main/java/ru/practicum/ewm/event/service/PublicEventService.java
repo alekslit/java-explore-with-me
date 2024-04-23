@@ -9,6 +9,7 @@ import ru.practicum.ewm.StatDto;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.status.EventStatus;
+import ru.practicum.ewm.exception.NotAvailableException;
 import ru.practicum.ewm.exception.NotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +19,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_SORTED_ADVICE;
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_SORTED_MESSAGE;
 import static ru.practicum.ewm.exception.NotFoundException.EVENT_NOT_FOUND_ADVICE;
 import static ru.practicum.ewm.exception.NotFoundException.EVENT_NOT_FOUND_MESSAGE;
 
@@ -110,7 +113,10 @@ public class PublicEventService {
                         .sorted(Comparator.comparing(Event::getViews))
                         .collect(Collectors.toList());
             default:
-                return eventList;
+                log.debug("{}: {}{}.", NotAvailableException.class.getSimpleName(),
+                        NOT_AVAILABLE_EVENT_SORTED_MESSAGE, sort);
+                throw new NotAvailableException(NOT_AVAILABLE_EVENT_SORTED_MESSAGE + sort,
+                        NOT_AVAILABLE_EVENT_SORTED_ADVICE);
         }
     }
 

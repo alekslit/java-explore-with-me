@@ -13,6 +13,7 @@ import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.event.status.EventStatusForUser;
+import ru.practicum.ewm.exception.NotAvailableException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.conflict.ConflictOperationException;
 import ru.practicum.ewm.user.User;
@@ -22,6 +23,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_UPDATE_STATUS_ADVICE_TO_USER;
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_UPDATE_STATUS_MESSAGE;
 import static ru.practicum.ewm.exception.NotFoundException.*;
 import static ru.practicum.ewm.exception.conflict.ConflictOperationException.*;
 
@@ -176,6 +179,10 @@ public class PrivateEventService {
                 event.setState(EventStatus.CANCELED);
                 return;
             default:
+                log.debug("{}: {}{}.", NotAvailableException.class.getSimpleName(),
+                        NOT_AVAILABLE_EVENT_UPDATE_STATUS_MESSAGE, eventRequest.getStateAction());
+                throw new NotAvailableException(NOT_AVAILABLE_EVENT_UPDATE_STATUS_MESSAGE +
+                        eventRequest.getStateAction(), NOT_AVAILABLE_EVENT_UPDATE_STATUS_ADVICE_TO_USER);
         }
     }
 

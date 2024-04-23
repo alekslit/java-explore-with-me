@@ -1,12 +1,14 @@
 package ru.practicum.ewm.event.dto;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 import ru.practicum.ewm.category.CategoryDto;
 
-@Data
+@Getter
+@ToString
 @Builder(toBuilder = true)
-public class EventShortDto {
+public final class EventShortDto {
     // идентификатор события:
     private final Long id;
     // краткое описание события:

@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.status.EventStatus;
+import ru.practicum.ewm.exception.NotAvailableException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.conflict.AlreadyExistException;
 import ru.practicum.ewm.exception.conflict.ConflictOperationException;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_REQUEST_STATUS_ADVICE;
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_REQUEST_STATUS_MESSAGE;
 import static ru.practicum.ewm.exception.NotFoundException.*;
 import static ru.practicum.ewm.exception.conflict.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_ADVICE;
 import static ru.practicum.ewm.exception.conflict.AlreadyExistException.DUPLICATE_PARTICIPATION_REQUEST_MESSAGE;
@@ -217,7 +220,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                         .collect(Collectors.toList());
                 return updateRequests;
             default:
-                return requestList;
+                log.debug("{}: {}{}.", NotAvailableException.class.getSimpleName(),
+                        NOT_AVAILABLE_REQUEST_STATUS_MESSAGE, request.getStatus());
+                throw new NotAvailableException(NOT_AVAILABLE_REQUEST_STATUS_MESSAGE + request.getStatus(),
+                        NOT_AVAILABLE_REQUEST_STATUS_ADVICE);
         }
     }
 
