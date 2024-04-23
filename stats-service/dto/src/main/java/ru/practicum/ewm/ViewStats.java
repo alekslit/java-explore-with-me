@@ -2,18 +2,16 @@ package ru.practicum.ewm;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
 public class ViewStats {
     // название сервиса:
-    private String app;
+    private final String app;
 
     // URI сервиса:
-    private String uri;
+    private final String uri;
 
     // количество просмотров:
-    private Long hits;
+    private final Long hits;
 }

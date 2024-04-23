@@ -1,18 +1,18 @@
 package ru.practicum.ewm;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.http.*;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 
-import java.util.List;
-
 @Service
+@Slf4j
 public class StatClient {
     private final RestTemplate rest;
 
@@ -24,42 +24,17 @@ public class StatClient {
     }
 
     /*---------------Основные методы---------------*/
-    public ResponseEntity<StatDto> saveStat(StatDto statDto) {
-        return makeAndSendRequest(HttpMethod.POST, "/hit", statDto);
+    public void saveStat(StatDto statDto) {
+        log.debug("Отправляем запрос на сохранение статистики (client).");
+        rest.postForEntity("/hit", statDto, StatDto.class).getBody();
     }
 
-    /*---------------Вспомогательные методы---------------*/
-    private ResponseEntity<StatDto> makeAndSendRequest(HttpMethod method, String path, StatDto body) {
-        HttpEntity<StatDto> requestEntity = new HttpEntity<>(body, defaultHeaders());
+    public Long getUniqueViewsByUri(String uri) {
+        log.debug("Отправляем запрос на получение количества просмотров (client).");
+        String path = "/stats/views?uri={uri}";
+        ResponseEntity<Long> response = rest
+                .exchange(path, HttpMethod.GET, null, Long.class, uri);
 
-        ResponseEntity<StatDto> ewmServerResponse;
-        try {
-            ewmServerResponse = rest.exchange(path, method, requestEntity, StatDto.class);
-        } catch (HttpStatusCodeException e) {
-            return ResponseEntity.status(e.getStatusCode()).body(body);
-        }
-
-        return prepareGatewayResponse(ewmServerResponse);
-    }
-
-    private HttpHeaders defaultHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
-
-        return headers;
-    }
-
-    private static ResponseEntity<StatDto> prepareGatewayResponse(ResponseEntity<StatDto> response) {
-        if (response.getStatusCode().is2xxSuccessful()) {
-            return response;
-        }
-        ResponseEntity.BodyBuilder responseBuilder = ResponseEntity.status(response.getStatusCode());
-
-        if (response.hasBody()) {
-            return responseBuilder.body(response.getBody());
-        }
-
-        return responseBuilder.build();
+        return response.getBody();
     }
 }

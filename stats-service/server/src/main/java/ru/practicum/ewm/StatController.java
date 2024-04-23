@@ -2,12 +2,16 @@ package ru.practicum.ewm;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.ewm.exception.NotAvailableException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
 import java.util.List;
+
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_DATE_TIME_ADVICE;
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_DATE_TIME_MESSAGE;
 
 @RestController
 @RequiredArgsConstructor
@@ -17,34 +21,36 @@ public class StatController {
 
     /*---------------Основные методы---------------*/
     @PostMapping("/hit")
+    @ResponseStatus(HttpStatus.CREATED)
     public StatDto saveStat(@RequestBody StatDto statDto) {
         return StatMapper.mapToStatDto(service.saveStat(statDto));
     }
 
     @GetMapping("/stats")
-    public List<ViewStats> getStats(@RequestParam(required = false) String start,
-                                    @RequestParam(required = false) String end,
-                                    @RequestParam(value = "uris", required = false) String[] uris,
+    public List<ViewStats> getStats(@RequestParam String start,
+                                    @RequestParam String end,
+                                    @RequestParam(required = false) List<String> uris,
                                     @RequestParam(defaultValue = "false") Boolean unique) {
-        return service.getStats(parseToLocalDateTime(start), parseToLocalDateTime(end), arrayToList(uris), unique);
+        checkRequestDateTime(start, end);
+        return service.getStats(start, end, uris, unique);
     }
 
-    /*---------------Вспомогательные методы---------------*/
-    private LocalDateTime parseToLocalDateTime(String time) {
+    @GetMapping("/stats/views")
+    public Long getUniqueViewsByUri(@RequestParam String uri) {
+        return service.getUniqueViewsByUri(uri);
+    }
+
+    /*---------------Вспомогательные методы (валидация запроса)---------------*/
+    private void checkRequestDateTime(String start, String end) {
+        if (start == null || end == null) {
+            return;
+        }
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        if (time != null) {
-            return LocalDateTime.parse(time, formatter);
-        } else {
-            return null;
+        LocalDateTime startTime = LocalDateTime.parse(start, formatter);
+        LocalDateTime endTime = LocalDateTime.parse(end, formatter);
+        if (startTime.isAfter(endTime)) {
+            log.debug("{}: {}", NotAvailableException.class.getSimpleName(), NOT_AVAILABLE_DATE_TIME_MESSAGE);
+            throw new NotAvailableException(NOT_AVAILABLE_DATE_TIME_MESSAGE, NOT_AVAILABLE_DATE_TIME_ADVICE);
         }
-    }
-
-    private List<String> arrayToList(String[] uris) {
-        if (uris == null) {
-            return null;
-        }
-        List<String> urisList = Arrays.asList(uris);
-
-        return urisList;
     }
 }
