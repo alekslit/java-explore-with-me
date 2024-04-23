@@ -2,11 +2,13 @@ package ru.practicum.ewm.event;
 
 import lombok.*;
 import ru.practicum.ewm.category.Category;
+import ru.practicum.ewm.event.comment.Comment;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.user.User;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder(toBuilder = true)
@@ -93,4 +95,15 @@ public class Event {
     // доступность для участия (есть ли свободные места):
     @Column(name = "available")
     private Boolean available;
+
+    // комментарии к событию от пользователей:
+    @OneToMany
+    @JoinColumn(name = "event_id")
+    @ToString.Exclude
+    private List<Comment> comments;
+
+    // количество уникальных комментариев у события
+    // (реализуем сортировку событий по "самым обсуждаемым / комментируемым"):
+    @Column(name = "comments_count")
+    private Long commentsCount;
 }

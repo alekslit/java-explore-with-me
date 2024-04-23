@@ -27,4 +27,6 @@ public final class EventShortDto {
     private final String title;
     // количество просмотрев события:
     private final Long views;
+    // количество уникальных комментариев у события
+    private final Long commentsCount;
 }

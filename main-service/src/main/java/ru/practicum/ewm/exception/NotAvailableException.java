@@ -19,7 +19,7 @@ public class NotAvailableException extends RuntimeException {
     public static final String NOT_AVAILABLE_EVENT_SORTED_MESSAGE = "Недопустимое значение сортировки списка " +
             "событий. sort = ";
     public static final String NOT_AVAILABLE_EVENT_SORTED_ADVICE = "Обратите внимание: " +
-            "1. Допустимые значения сортировки: EVENT_DATE, VIEWS. " +
+            "1. Допустимые значения сортировки: EVENT_DATE, VIEWS, COMMENTS. " +
             "2. Значение сортировки можно не указывать, если сортировка не требуется.";
     public static final String NOT_AVAILABLE_REQUEST_STATUS_MESSAGE = "Недопустимое значение нового статуса запроса " +
             "на участие в событии. status = ";

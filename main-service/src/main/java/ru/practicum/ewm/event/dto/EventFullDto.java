@@ -4,6 +4,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.ToString;
 import ru.practicum.ewm.category.CategoryDto;
+import ru.practicum.ewm.event.comment.CommentDto;
+
+import java.util.List;
 
 @Getter
 @ToString
@@ -41,4 +44,12 @@ public final class EventFullDto {
     private final String title;
     // количество просмотров события:
     private final Long views;
+    // комментарии пользователей (добавляются опционально):
+    private List<CommentDto> comments;
+    // количество уникальных комментариев у события
+    private final Long commentsCount;
+
+    public void setComments(List<CommentDto> comments) {
+        this.comments = comments;
+    }
 }

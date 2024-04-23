@@ -9,6 +9,8 @@ import ru.practicum.ewm.category.CategoryRepository;
 import ru.practicum.ewm.event.Event;
 import ru.practicum.ewm.event.EventMapper;
 import ru.practicum.ewm.event.EventRepository;
+import ru.practicum.ewm.event.comment.CommentMapper;
+import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.dto.NewEventDto;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
 import ru.practicum.ewm.event.status.EventStatus;
@@ -60,13 +62,17 @@ public class PrivateEventService {
         return eventRepository.findAllByInitiatorId(userId, pageRequest).getContent();
     }
 
-    public Event getUserEventById(Long userId, Long eventId) {
+    public EventFullDto getUserEventById(Long userId, Long eventId) {
         log.debug("Попытка получить Event пользователя по его eventId.");
         // проверяем существует ли пользователь:
         getUserById(userId);
+        // получаем событие с комментариями:
+        Event event = getEventWithCommentsById(eventId);
+        // готовим dto объект для ответа:
+        EventFullDto eventFullDto = EventMapper.mapToEventFullDto(event);
+        eventFullDto.setComments(CommentMapper.mapToCommentDto(event.getComments()));
 
-        // проверяем существует ли событие:
-        return getEventById(eventId);
+        return eventFullDto;
     }
 
     public Event updateEvent(UpdateEventRequest eventRequest, Long userId, Long eventId) {
@@ -190,5 +196,12 @@ public class PrivateEventService {
         if (event.getParticipantLimit() > 0 && event.getParticipantLimit().equals(event.getConfirmedRequests())) {
             event.setAvailable(false);
         }
+    }
+
+    private Event getEventWithCommentsById(Long eventId) {
+        return eventRepository.getEventWithCommentsByIdAndStateIsOptional(eventId, null).orElseThrow(() -> {
+            log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), EVENT_NOT_FOUND_MESSAGE, eventId);
+            return new NotFoundException(EVENT_NOT_FOUND_MESSAGE + eventId, EVENT_NOT_FOUND_ADVICE);
+        });
     }
 }

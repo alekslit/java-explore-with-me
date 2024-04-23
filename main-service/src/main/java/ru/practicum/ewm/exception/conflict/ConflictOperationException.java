@@ -26,6 +26,22 @@ public class ConflictOperationException extends CustomConflictException {
             "находящихся в состоянии ожидания.";
     public static final String PARTICIPANT_COUNT_IS_MAX_ADVICE = "Нельзя подтвердить заявку, достигнут лимит " +
             "по заявкам на данное событие.";
+    public static final String UPDATE_COMMENT_CONFLICT_MESSAGE = "Невозможно изменить комментарий. commentId = ";
+    public static final String COMMENT_DATE_TIME_CONFLICT_ADVICE = "Комментарий можно изменять только в течении " +
+            "24-ёх часов с момента его создания.";
+    public static final String COMMENT_OWNER_CONFLICT_ADVICE = "Комментарий может изменять только его автор.";
+    public static final String COMPLAINT_REASON_CONFLICT_MESSAGE = "Невозможно отправить жалобу на комментарий " +
+            "с такой причиной. reason = ";
+    public static final String COMPLAINT_REASON_CONFLICT_ADVICE = "Причина жалоба должна иметь одно из значений: " +
+            "OBSCENE, ABUSE, SPAM, OTHER.";
+    public static final String COMPLAINT_AUTHOR_CONFLICT_MESSAGE = "Невозможно отправить жалобу на комментарий " +
+            "пользователю с таким id. userId = ";
+    public static final String COMPLAINT_AUTHOR_CONFLICT_ADVICE = "Автор комментария не может отправить жалобу " +
+            "на свой комментарий.";
+    public static final String COMMENT_EVENT_STATUS_CONFLICT_MESSAGE = "Невозможно оставить комментарий этому " +
+            "событию. eventId = ";
+    public static final String COMMENT_EVENT_STATUS_CONFLICT_ADVICE = "Оставлять комментарии можно только " +
+            "у опубликованных (PUBLISHED) событий.";
 
     public ConflictOperationException(String message, String adviceToUser) {
         super(message, adviceToUser);

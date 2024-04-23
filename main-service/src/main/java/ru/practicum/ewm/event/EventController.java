@@ -54,10 +54,11 @@ public class EventController {
         return EventMapper.mapToEventFullDto(privateService.getAllUserEvent(userId, from, size));
     }
 
+    // По этому эндпоинту получаем событие с комментариями:
     @GetMapping("/users/{userId}/events/{eventId}")
     public EventFullDto getUserEventById(@PathVariable Long userId,
                                          @PathVariable Long eventId) {
-        return EventMapper.mapToEventFullDto(privateService.getUserEventById(userId, eventId));
+        return privateService.getUserEventById(userId, eventId);
     }
 
     @PatchMapping("/users/{userId}/events/{eventId}")
@@ -114,10 +115,11 @@ public class EventController {
                         onlyAvailable, sort, from, size, request));
     }
 
+    // По этому эндпоинту получаем событие с комментариями:
     @GetMapping("/events/{id}")
     public EventFullDto getPublishedEventById(@PathVariable Long id,
                                               HttpServletRequest request) {
-        return EventMapper.mapToEventFullDto(publicService.getPublishedEventById(id, request));
+        return publicService.getPublishedEventById(id, request);
     }
 
     /*--------------------Вспомогательные методы (валидация запроса)--------------------*/
