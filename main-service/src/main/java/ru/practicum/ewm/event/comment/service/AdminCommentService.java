@@ -8,14 +8,12 @@ import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.comment.Comment;
 import ru.practicum.ewm.event.comment.CommentRepository;
 import ru.practicum.ewm.event.comment.complaint.Complaint;
-import ru.practicum.ewm.event.comment.complaint.ComplaintReason;
 import ru.practicum.ewm.event.comment.complaint.ComplaintRepository;
 import ru.practicum.ewm.exception.NotFoundException;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static ru.practicum.ewm.exception.NotFoundException.*;
 
@@ -55,7 +53,6 @@ public class AdminCommentService {
 
     public List<Complaint> getAllComplaints(List<Long> users,
                                             List<Long> comments,
-                                            List<String> reasons,
                                             String rangeStart,
                                             String rangeEnd,
                                             Integer from,
@@ -63,8 +60,8 @@ public class AdminCommentService {
         log.debug("Попытка получить список объектов Complaint по фильтрам.");
         PageRequest pageRequest = PageRequest.of(from > 0 ? from / size : 0, size);
 
-        return complaintRepository.getAllComplaints(users, comments, mapToComplaintReason(reasons),
-                parseToLocalDateTime(rangeStart), parseToLocalDateTime(rangeEnd), pageRequest).getContent();
+        return complaintRepository.getAllComplaints(users, comments, parseToLocalDateTime(rangeStart),
+                parseToLocalDateTime(rangeEnd), pageRequest).getContent();
     }
 
     /*---------------Вспомогательные методы---------------*/
@@ -89,14 +86,5 @@ public class AdminCommentService {
         } else {
             return null;
         }
-    }
-
-    private List<ComplaintReason> mapToComplaintReason(List<String> reasonList) {
-        if (reasonList == null) {
-            return null;
-        }
-        return reasonList.stream()
-                .map(ComplaintReason::valueOf)
-                .collect(Collectors.toList());
     }
 }

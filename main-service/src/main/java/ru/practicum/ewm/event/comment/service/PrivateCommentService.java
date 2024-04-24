@@ -152,7 +152,7 @@ public class PrivateCommentService {
     }
 
     private void checkForUserIsAuthorComment(Comment comment, Long userId) {
-        if (!comment.getId().equals(userId)) {
+        if (!comment.getUser().getId().equals(userId)) {
             log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
                     UPDATE_COMMENT_CONFLICT_MESSAGE, comment.getId());
             throw new ConflictOperationException(UPDATE_COMMENT_CONFLICT_MESSAGE + comment.getId(),
@@ -173,7 +173,7 @@ public class PrivateCommentService {
     }
 
     private void checkForUserIsNotAuthorComment(Comment comment, Long userId) {
-        if (comment.getId().equals(userId)) {
+        if (comment.getUser().getId().equals(userId)) {
             log.debug("{}: {}{}.", ConflictOperationException.class.getSimpleName(),
                     COMPLAINT_AUTHOR_CONFLICT_MESSAGE, userId);
             throw new ConflictOperationException(COMPLAINT_AUTHOR_CONFLICT_MESSAGE + userId,

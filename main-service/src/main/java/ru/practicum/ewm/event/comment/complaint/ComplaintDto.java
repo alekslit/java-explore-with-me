@@ -15,7 +15,7 @@ public class ComplaintDto {
     private Long id;
 
     @NotBlank(message = "Причина жалобы (reason) не может быть пустой.")
-    @Size(min = 4, max = 10, message = "Слишком длинная или слишком короткая причина жалобы. " +
+    @Size(min = 4, max = 7, message = "Слишком длинная или слишком короткая причина жалобы. " +
             "Длинна поля причины жалобы должна быть от {min} до {max} символов.")
     // причина жалобы:
     private String reason;

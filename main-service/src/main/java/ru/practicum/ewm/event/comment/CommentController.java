@@ -51,6 +51,7 @@ public class CommentController {
 
     // жалоба на комментарий пользователя:
     @PostMapping("users/{userId}/events/comments/{commentId}/complaint")
+    @ResponseStatus(HttpStatus.CREATED)
     public ComplaintDto saveComplaint(@Valid @RequestBody ComplaintDto complaintDto,
                                       @PathVariable Long userId,
                                       @PathVariable Long commentId) {
@@ -83,11 +84,10 @@ public class CommentController {
     }
 
     // поиск жалоб по фильтрам:
-    @GetMapping("admin/events/comments/complaint")
+    @GetMapping("admin/events/comments/complaints")
     public List<ComplaintDto> getAllComplaints(
             @RequestParam(required = false) List<Long> users,
             @RequestParam(required = false) List<Long> comments,
-            @RequestParam(required = false) List<String> reasons,
             @RequestParam(required = false) String rangeStart,
             @RequestParam(required = false) String rangeEnd,
             @RequestParam(defaultValue = "0") @PositiveOrZero(message = "Параметр запроса from, должен быть " +
@@ -96,6 +96,6 @@ public class CommentController {
                     "положительным числом.") Integer size) {
 
         return ComplaintMapper.mapToComplaintDto(adminService
-                .getAllComplaints(users, comments, reasons, rangeStart, rangeEnd, from, size));
+                .getAllComplaints(users, comments, rangeStart, rangeEnd, from, size));
     }
 }

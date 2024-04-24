@@ -119,7 +119,7 @@ public class PublicEventService {
             case "COMMENTS":
                 // добавим возможность сортировки по количеству уникальных комментариев:
                 return eventList.stream()
-                        .sorted(Comparator.comparing(Event::getCommentsCount))
+                        .sorted(Comparator.comparing(Event::getCommentsCount).reversed())
                         .collect(Collectors.toList());
             default:
                 log.debug("{}: {}{}.", NotAvailableException.class.getSimpleName(),

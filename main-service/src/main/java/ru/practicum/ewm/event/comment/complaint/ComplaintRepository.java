@@ -13,12 +13,10 @@ public interface ComplaintRepository extends JpaRepository<Complaint, Long> {
             "FROM Complaint AS c " +
             "WHERE (COALESCE(:users) IS NULL OR c.user.id IN :users) " +
             "  AND (COALESCE(:comments) IS NULL OR c.comment.id IN :comments) " +
-            "  AND (COALESCE(:reasons) IS NULL OR c.reason IN :reasons) " +
             "  AND (CAST(:rangeStart AS timestamp) IS NULL OR c.creationDate >= :rangeStart) " +
             "  AND (CAST(:rangeEnd AS timestamp) IS NULL OR c.creationDate <= :rangeEnd)")
     Page<Complaint> getAllComplaints(List<Long> users,
                                      List<Long> comments,
-                                     List<ComplaintReason> reasons,
                                      LocalDateTime rangeStart,
                                      LocalDateTime rangeEnd,
                                      Pageable pageable);
