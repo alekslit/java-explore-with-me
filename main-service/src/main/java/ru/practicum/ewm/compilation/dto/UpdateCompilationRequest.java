@@ -1,12 +1,16 @@
 package ru.practicum.ewm.compilation.dto;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.Size;
 import java.util.List;
 
-@Data
-public class UpdateCompilationRequest {
+@Getter
+@ToString
+@AllArgsConstructor
+public final class UpdateCompilationRequest {
     // список идентификаторов событий входящих в подборку:
     private final List<Long> events;
 

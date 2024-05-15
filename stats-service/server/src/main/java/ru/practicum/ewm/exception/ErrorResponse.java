@@ -1,11 +1,13 @@
 package ru.practicum.ewm.exception;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
-@Data
+@Getter
+@ToString
 @Builder
-public class ErrorResponse {
+public final class ErrorResponse {
     private final String error;
     private final String adviceToUser;
 }

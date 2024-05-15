@@ -1,14 +1,16 @@
 package ru.practicum.ewm.compilation.dto;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 import ru.practicum.ewm.event.dto.EventShortDto;
 
 import java.util.List;
 
-@Data
+@Getter
+@ToString
 @Builder(toBuilder = true)
-public class CompilationDto {
+public final class CompilationDto {
     private final Long id;
     private final Boolean pinned;
     private final String title;

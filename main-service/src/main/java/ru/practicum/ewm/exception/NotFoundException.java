@@ -13,6 +13,8 @@ public class NotFoundException extends RuntimeException {
             "запроса на участие в событии.";
     public static final String COMPILATION_NOT_FOUND_MESSAGE = "Подборки с таким id не существует. compId = ";
     public static final String COMPILATION_NOT_FOUND_ADVICE = "Пожалуйста проверьте корректность id подборки.";
+    public static final String COMMENT_NOT_FOUND_MESSAGE = "Комментария с таким id не существует. commentId = ";
+    public static final String COMMENT_NOT_FOUND_ADVICE = "Пожалуйста проверьте корректность id комментария.";
 
     private final String adviceToUser;
 

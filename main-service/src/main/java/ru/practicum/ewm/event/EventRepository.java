@@ -50,4 +50,11 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     Optional<Event> findByIdAndState(Long eventId, EventStatus state);
 
     List<Event> findAllByIdIn(List<Long> eventIds);
+
+    @Query("SELECT e " +
+            "FROM Event AS e " +
+            "LEFT JOIN FETCH e.comments AS c " +
+            "WHERE (e.id = :eventId) " +
+            "  AND (:state IS NULL OR e.state = :state)")
+    Optional<Event> getEventWithCommentsByIdAndStateIsOptional(Long eventId, EventStatus state);
 }

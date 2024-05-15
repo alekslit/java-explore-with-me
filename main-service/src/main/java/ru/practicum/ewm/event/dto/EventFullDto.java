@@ -1,12 +1,17 @@
 package ru.practicum.ewm.event.dto;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 import ru.practicum.ewm.category.CategoryDto;
+import ru.practicum.ewm.event.comment.CommentDto;
 
-@Data
+import java.util.List;
+
+@Getter
+@ToString
 @Builder(toBuilder = true)
-public class EventFullDto {
+public final class EventFullDto {
     // идентификатор события:
     private final Long id;
     // краткое описание события:
@@ -39,4 +44,12 @@ public class EventFullDto {
     private final String title;
     // количество просмотров события:
     private final Long views;
+    // комментарии пользователей (добавляются опционально):
+    private List<CommentDto> comments;
+    // количество уникальных комментариев у события
+    private final Long commentsCount;
+
+    public void setComments(List<CommentDto> comments) {
+        this.comments = comments;
+    }
 }

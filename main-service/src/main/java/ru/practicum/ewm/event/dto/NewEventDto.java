@@ -1,15 +1,17 @@
 package ru.practicum.ewm.event.dto;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.PositiveOrZero;
 import javax.validation.constraints.Size;
 
-@Data
-@Builder(toBuilder = true)
-public class NewEventDto {
+@Getter
+@ToString
+@AllArgsConstructor
+public final class NewEventDto {
     // краткое описание события:
     @NotBlank(message = "Краткое описание события (annotation) не может быть пустым.")
     @Size(min = 20, max = 2000, message = "Слишком длинное или слишком короткое краткое описание события " +

@@ -1,12 +1,14 @@
 package ru.practicum.ewm;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
-@Data
+@Getter
+@ToString
 @Builder
-public class StatDto {
-    private Long id;
+public final class StatDto {
+    private final Long id;
     private final String app;
     private final String uri;
     private final String ip;

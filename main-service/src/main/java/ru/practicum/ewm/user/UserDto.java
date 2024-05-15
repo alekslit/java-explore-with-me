@@ -1,17 +1,19 @@
 package ru.practicum.ewm.user;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-@Data
+@Getter
+@ToString
 @Builder(toBuilder = true)
-public class UserDto {
+public final class UserDto {
     // идентификатор:
-    private Long id;
+    private final Long id;
 
     // имя:
     @NotBlank(message = "Имя пользователя не может быть пустым")

@@ -11,6 +11,7 @@ import ru.practicum.ewm.event.EventRepository;
 import ru.practicum.ewm.event.dto.UpdateEventRequest;
 import ru.practicum.ewm.event.status.EventStatus;
 import ru.practicum.ewm.event.status.EventStatusForAdmin;
+import ru.practicum.ewm.exception.NotAvailableException;
 import ru.practicum.ewm.exception.NotFoundException;
 import ru.practicum.ewm.exception.conflict.ConflictOperationException;
 
@@ -19,6 +20,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_UPDATE_STATUS_ADVICE_TO_ADMIN;
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_UPDATE_STATUS_MESSAGE;
 import static ru.practicum.ewm.exception.NotFoundException.*;
 import static ru.practicum.ewm.exception.conflict.ConflictOperationException.*;
 
@@ -139,6 +142,7 @@ public class AdminEventService {
     }
 
     private void updateEventState(Event event, UpdateEventRequest eventRequest) {
+        // если обновляем данные события, без изменения его статуса:
         if (eventRequest.getStateAction() == null) {
             return;
         }
@@ -171,8 +175,12 @@ public class AdminEventService {
                     throw new ConflictOperationException(CONFLICT_UPDATE_EVENT_MESSAGE + event.getId(),
                             CANCELED_CONFLICT_ADVICE);
                 }
-                // ничего не делаем:
             default:
+                // некорректное значение:
+                log.debug("{}: {}{}.", NotAvailableException.class.getSimpleName(),
+                        NOT_AVAILABLE_EVENT_UPDATE_STATUS_MESSAGE, eventRequest.getStateAction());
+                throw new NotAvailableException(NOT_AVAILABLE_EVENT_UPDATE_STATUS_MESSAGE +
+                        eventRequest.getStateAction(), NOT_AVAILABLE_EVENT_UPDATE_STATUS_ADVICE_TO_ADMIN);
         }
     }
 

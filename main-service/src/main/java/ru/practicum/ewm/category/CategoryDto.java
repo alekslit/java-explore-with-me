@@ -1,14 +1,16 @@
 package ru.practicum.ewm.category;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-@Data
+@Getter
+@ToString
 @Builder(toBuilder = true)
-public class CategoryDto {
+public final class CategoryDto {
     // идентификатор категории:
     private final Long id;
 

@@ -1,11 +1,13 @@
 package ru.practicum.ewm.event.dto;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
+import lombok.ToString;
 
-@Data
+@Getter
+@ToString
 @Builder(toBuilder = true)
-public class Location {
+public final class Location {
     // широта:
     private final Double lat;
     // долгота:

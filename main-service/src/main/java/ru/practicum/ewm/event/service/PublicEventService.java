@@ -7,8 +7,12 @@ import org.springframework.stereotype.Service;
 import ru.practicum.ewm.StatClient;
 import ru.practicum.ewm.StatDto;
 import ru.practicum.ewm.event.Event;
+import ru.practicum.ewm.event.EventMapper;
 import ru.practicum.ewm.event.EventRepository;
+import ru.practicum.ewm.event.comment.CommentMapper;
+import ru.practicum.ewm.event.dto.EventFullDto;
 import ru.practicum.ewm.event.status.EventStatus;
+import ru.practicum.ewm.exception.NotAvailableException;
 import ru.practicum.ewm.exception.NotFoundException;
 
 import javax.servlet.http.HttpServletRequest;
@@ -18,6 +22,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_SORTED_ADVICE;
+import static ru.practicum.ewm.exception.NotAvailableException.NOT_AVAILABLE_EVENT_SORTED_MESSAGE;
 import static ru.practicum.ewm.exception.NotFoundException.EVENT_NOT_FOUND_ADVICE;
 import static ru.practicum.ewm.exception.NotFoundException.EVENT_NOT_FOUND_MESSAGE;
 
@@ -62,20 +68,21 @@ public class PublicEventService {
         return eventList;
     }
 
-    public Event getPublishedEventById(Long id, HttpServletRequest request) {
+    public EventFullDto getPublishedEventById(Long id, HttpServletRequest request) {
         log.debug("Попытка получить опубликованный объект Event по его id.");
-        // получаем объект:
-        Event event = eventRepository.findByIdAndState(id, EventStatus.PUBLISHED).orElseThrow(() -> {
-            log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), EVENT_NOT_FOUND_MESSAGE, id);
-            return new NotFoundException(EVENT_NOT_FOUND_MESSAGE + id, EVENT_NOT_FOUND_ADVICE);
-        });
+        // получаем объект вместе с комментариями:
+        Event event = getEventWithCommentsByIdAndState(id, EventStatus.PUBLISHED);
         // информацию о том, что по этому эндпоинту был осуществлен и обработан запрос,
         // нужно сохранить в сервисе статистики:
         saveStats(request);
         // обновим информацию о просмотрах по этому событию в БД:
         addViewsToEvent(event);
+        eventRepository.save(event);
+        // Готовим dto объект:
+        EventFullDto eventFullDto = EventMapper.mapToEventFullDto(event);
+        eventFullDto.setComments(CommentMapper.mapToCommentDto(event.getComments()));
 
-        return eventRepository.save(event);
+        return eventFullDto;
     }
 
     /*--------------------Вспомогательные методы--------------------*/
@@ -109,8 +116,16 @@ public class PublicEventService {
                 return eventList.stream()
                         .sorted(Comparator.comparing(Event::getViews))
                         .collect(Collectors.toList());
+            case "COMMENTS":
+                // добавим возможность сортировки по количеству уникальных комментариев:
+                return eventList.stream()
+                        .sorted(Comparator.comparing(Event::getCommentsCount).reversed())
+                        .collect(Collectors.toList());
             default:
-                return eventList;
+                log.debug("{}: {}{}.", NotAvailableException.class.getSimpleName(),
+                        NOT_AVAILABLE_EVENT_SORTED_MESSAGE, sort);
+                throw new NotAvailableException(NOT_AVAILABLE_EVENT_SORTED_MESSAGE + sort,
+                        NOT_AVAILABLE_EVENT_SORTED_ADVICE);
         }
     }
 
@@ -122,5 +137,13 @@ public class PublicEventService {
                 .ip(request.getRemoteAddr())
                 .timestamp(formatter.format(LocalDateTime.now()))
                 .build());
+    }
+
+    private Event getEventWithCommentsByIdAndState(Long eventId, EventStatus state) {
+        return eventRepository.getEventWithCommentsByIdAndStateIsOptional(eventId, state)
+                .orElseThrow(() -> {
+                    log.debug("{}: {}{}.", NotFoundException.class.getSimpleName(), EVENT_NOT_FOUND_MESSAGE, eventId);
+                    return new NotFoundException(EVENT_NOT_FOUND_MESSAGE + eventId, EVENT_NOT_FOUND_ADVICE);
+                });
     }
 }
